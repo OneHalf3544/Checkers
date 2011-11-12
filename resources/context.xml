@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans">
+
+    <bean id="resourceBundle" class="ru.javatalks.checkers.L10nBundleFactory" factory-method="getBundle"/>
+
+    <bean id="menu" class="ru.javatalks.checkers.Menu" />
+</beans>
