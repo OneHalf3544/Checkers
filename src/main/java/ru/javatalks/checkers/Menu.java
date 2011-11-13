@@ -94,7 +94,6 @@ public class Menu {
         mainPanel.add(chessBoard);
         mainPanel.add(resultPanel);
 
-        frame.addKeyListener(act);
         frame.setFocusable(true);
         frame.getRootPane().setOpaque(true);
         frame.getContentPane().setLayout(new BorderLayout());
@@ -171,8 +170,8 @@ public class Menu {
             }
             return;
         }
-        if (logic.getCompFighter().status == CellStatus.NONE
-                && logic.getCompStepper().status == CellStatus.NONE
+        if (logic.getCompFighter().isEmpty()
+                && logic.getCompStepper().isEmpty()
                 && chessBoard.compCheckers != 0) {
             logic.nextStepCompFlag = false;
             int userChoice = JOptionPane.showOptionDialog(null,
@@ -187,8 +186,8 @@ public class Menu {
             }
             return;
         }
-        if (logic.getUserFighter().status == CellStatus.NONE
-                && logic.getUserStepper().status == CellStatus.NONE
+        if (logic.getUserFighter().isEmpty()
+                && logic.getUserStepper().isEmpty()
                 && chessBoard.userCheckers != 0) {
             int userChoice = JOptionPane.showOptionDialog(null,
                     bundle.getString("userIsBlockedText"),
@@ -220,14 +219,15 @@ public class Menu {
     public static void main(String... args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            if (args.length > 0) {
-                new Menu(args[0]).setGui();
-            }
-            else {
-                new Menu("russian").setGui();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        }
+        catch (Exception ignore) {
+        }
+        
+        if (args.length > 0) {
+            new Menu(args[0]).setGui();
+        }
+        else {
+            new Menu("russian").setGui();
         }
     }
 }

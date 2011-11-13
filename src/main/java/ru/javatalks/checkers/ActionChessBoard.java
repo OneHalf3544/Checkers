@@ -1,5 +1,7 @@
 package ru.javatalks.checkers;
 
+import ru.javatalks.checkers.model.Cell;
+
 import java.awt.event.*;
 
 /** 
@@ -39,8 +41,8 @@ class ActionChessBoard extends MouseAdapter {
 
             /* If was click on deactive checker, but we hawe active checker, active becomes deactive, and deactive becomes active */
             if (selectingFlag
-                    && (clickedCell.status == CellStatus.USER_CHECKER
-                    || clickedCell.status == CellStatus.WHITE_QUEEN)) {
+                    && (clickedCell.getStatus() == CellStatus.USER_CHECKER
+                    || clickedCell.getStatus() == CellStatus.WHITE_QUEEN)) {
                 resetActiveCell();
                 setActiveCell(clickedCell);
                 return;
@@ -68,13 +70,13 @@ class ActionChessBoard extends MouseAdapter {
     }
     
     void setActiveCell(Cell cell) {
-        if (cell.status == CellStatus.USER_CHECKER) {
-            cell.status = CellStatus.ACTIVE;
+        if (cell.getStatus() == CellStatus.USER_CHECKER) {
+            cell.setChecker(CellStatus.ACTIVE);
             selectingFlag = true;
             return;
         }
-        if (cell.status == CellStatus.WHITE_QUEEN) {
-            cell.status = CellStatus.ACTIVE_QUEEN;
+        if (cell.getStatus() == CellStatus.WHITE_QUEEN) {
+            cell.setChecker(CellStatus.ACTIVE_QUEEN);
             selectingFlag = true;
             return;
         }
@@ -84,13 +86,13 @@ class ActionChessBoard extends MouseAdapter {
         Cell cell;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             cell = cBoard.cells[cCounter];
-            if (cell.status == CellStatus.ACTIVE) {
-                cell.status = CellStatus.USER_CHECKER;
+            if (cell.getStatus() == CellStatus.ACTIVE) {
+                cell.setChecker(CellStatus.USER_CHECKER);
                 selectingFlag = false;
                 return;
             }
-            if (cell.status == CellStatus.ACTIVE_QUEEN) {
-                cell.status = CellStatus.WHITE_QUEEN;
+            if (cell.getStatus() == CellStatus.ACTIVE_QUEEN) {
+                cell.setChecker(CellStatus.WHITE_QUEEN);
                 selectingFlag = false;
                 return;
             }
@@ -101,7 +103,7 @@ class ActionChessBoard extends MouseAdapter {
         Cell cell;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             cell = cBoard.cells[cCounter];
-            if (cell.status == CellStatus.ACTIVE || cell.status == CellStatus.ACTIVE_QUEEN) {
+            if (cell.getStatus() == CellStatus.ACTIVE || cell.getStatus() == CellStatus.ACTIVE_QUEEN) {
                 return cell;
             }
         }

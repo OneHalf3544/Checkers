@@ -1,5 +1,7 @@
 package ru.javatalks.checkers;
 
+import ru.javatalks.checkers.model.Cell;
+
 import java.awt.*;
 
 /**
@@ -21,21 +23,21 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.WHITE);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
         }
     },
     GREY(false) { // 2
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
         }
     },
     USER_CHECKER(true) { // 3
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.WHITE);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
@@ -44,7 +46,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.BLACK);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
@@ -53,7 +55,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.RED);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
@@ -62,7 +64,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.WHITE);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
             graphics.setPaint(Color.LIGHT_GRAY);
@@ -74,7 +76,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.BLACK);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
             graphics.setPaint(Color.LIGHT_GRAY);
@@ -85,7 +87,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.WHITE);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
             graphics.setPaint(Color.RED);
@@ -96,7 +98,7 @@ public enum CellStatus {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
-            graphics.fillRect(cell.cX, cell.cY, cellSize, cellSize);
+            graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
             graphics.setPaint(Color.GREEN);
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }

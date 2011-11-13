@@ -1,5 +1,7 @@
 package ru.javatalks.checkers;
 
+import ru.javatalks.checkers.model.Cell;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +22,13 @@ class Logic implements Runnable {
     private ChessBoard cBoard;
     private Menu menu;
     private String userResultCheckersNum;
-    private Cell turkishArr[] = new Cell[12];
-    
+    private Cell[] turkishArr = new Cell[12];
+
+    Logic(ChessBoard cBoard, Menu menu) {
+        this.cBoard = cBoard;
+        this.menu = menu;
+        initTurkishArr();
+    }
     
     void userStep(Cell activeCell, Cell targetCell) {
         
@@ -29,8 +36,8 @@ class Logic implements Runnable {
          * There is a fighter checker,
          * but we selected other checker, which is not fighter 
          */
-        if (getUserFighter().status != CellStatus.NONE && isFighter(activeCell) == false) {
-            menu.resultBuf = menu.userHasFighterText + getUserFighter().index + "\n";
+        if (getUserFighter().getStatus() != CellStatus.NONE && isFighter(activeCell) == false) {
+            menu.resultBuf = menu.userHasFighterText + getUserFighter().getIndex() + "\n";
             menu.customResult();
             return;
         }
@@ -40,10 +47,10 @@ class Logic implements Runnable {
             Cell actCells[] = fight(activeCell, targetCell);
             Cell victimCell = actCells[0];
             if (!inActionFlag) {
-                userResultCheckersNum = activeCell.index;
+                userResultCheckersNum = activeCell.getIndex();
             }
             activeCell = actCells[1];
-            if (activeCell.status == CellStatus.NONE) {
+            if (activeCell.getStatus() == CellStatus.NONE) {
                 menu.resultBuf = menu.userMustFightText + "\n";                
                 menu.customResult();
                 return;
@@ -53,14 +60,14 @@ class Logic implements Runnable {
             if (isFighter(activeCell)) {
                 menu.act.setActiveCell(activeCell);
                 inActionFlag = true;
-                userResultCheckersNum += ":" + activeCell.index;
+                userResultCheckersNum += ":" + activeCell.getIndex();
                 return;
             }
             if (!isFighter(activeCell)) {
                 menu.act.resetActiveCell();
                 resetTurkishArr();
                 inActionFlag = false;
-                userResultCheckersNum += ":" + activeCell.index;
+                userResultCheckersNum += ":" + activeCell.getIndex();
                 menu.resultBuf = userResultCheckersNum + "\n";
                 menu.customResult();
                 nextStepCompFlag = true;                
@@ -72,8 +79,8 @@ class Logic implements Runnable {
         /* If there is no fighter checker we move */
         if (isMover(activeCell)) {
             Cell mCell = move(activeCell, targetCell);
-            if (mCell.status == CellStatus.USER_CHECKER || mCell.status == CellStatus.WHITE_QUEEN) {
-                menu.resultBuf = activeCell.index + ":" + mCell.index + "\n";
+            if (mCell.getStatus() == CellStatus.USER_CHECKER || mCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                menu.resultBuf = activeCell.getIndex() + ":" + mCell.getIndex() + "\n";
                 nextStepCompFlag = true;                
             } else {
                 menu.resultBuf = menu.wrongNextCellText + "\n";
@@ -98,9 +105,9 @@ class Logic implements Runnable {
         try {
             menu.resultBuf = menu.stepCompText + "\n";
             activeCell = getCompFighter();
-            if (activeCell.status != CellStatus.NONE) {
+            if (activeCell.getStatus() != CellStatus.NONE) {
                 do {
-                    menu.resultBuf += activeCell.index;
+                    menu.resultBuf += activeCell.getIndex();
                     Thread.sleep(500);
                     if (isFighter(activeCell)) {
                         menu.resultBuf += ":";
@@ -110,7 +117,7 @@ class Logic implements Runnable {
                     activeCell = actCells[1];
                         if(isFighter(activeCell))
                         addToTurkishArr(victimCell);
-                } while (activeCell.status != CellStatus.NONE);
+                } while (activeCell.getStatus() != CellStatus.NONE);
                 menu.resultBuf += "\n";
                 resetTurkishArr();                
                 menu.customResult();
@@ -119,11 +126,11 @@ class Logic implements Runnable {
                 return;
             }
             activeCell = getCompStepper();
-            if (activeCell.status != CellStatus.NONE) {
+            if (activeCell.getStatus() != CellStatus.NONE) {
                 Thread.sleep(700);
-                menu.resultBuf += activeCell.index;
+                menu.resultBuf += activeCell.getIndex();
                 activeCell = move(activeCell);
-                menu.resultBuf += ":" + activeCell.index;
+                menu.resultBuf += ":" + activeCell.getIndex();
                 menu.resultBuf += "\n";
                 menu.customResult();
                 menu.tArea.setCaretPosition(menu.tArea.getDocument().getLength());
@@ -139,9 +146,9 @@ class Logic implements Runnable {
      * To make right turkish blow rule
      */
     protected boolean addToTurkishArr(Cell cell) {
-        cell.status = CellStatus.CHECKER_IN_FIGHT;
+        cell.setChecker(CellStatus.CHECKER_IN_FIGHT);
         for (int i = 0; i < turkishArr.length; i++) {
-            if (turkishArr[i].status == CellStatus.NONE) {
+            if (turkishArr[i].getStatus() == CellStatus.NONE) {
                 turkishArr[i] = cell;
                 return true;
             }
@@ -151,7 +158,7 @@ class Logic implements Runnable {
 
     private void resetTurkishArr() {
         for (int i = 0; i < turkishArr.length; i++) {
-            turkishArr[i].status = CellStatus.GREY;
+            turkishArr[i].setChecker(CellStatus.GREY);
             turkishArr[i] = new Cell(CellStatus.NONE);
         }
     }
@@ -171,168 +178,170 @@ class Logic implements Runnable {
         }
     }
 
-    /** We check is checker a fighter */
+    /**
+     * We check is checker a fighter
+     */
     private boolean isFighter(Cell cell) {
         Cell firstNext;
         Cell secondNext;
         /* for black checkers */
-        if (cell.status == CellStatus.COMP_CHECKER) {
+        if (cell.getStatus() == CellStatus.COMP_CHECKER) {
             /* left upper next cell */
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.USER_CHECKER || firstNext.status == CellStatus.WHITE_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX - cBoard.cellSize, firstNext.cY - cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.USER_CHECKER || firstNext.getStatus() == CellStatus.WHITE_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() - cBoard.cellSize, firstNext.getcY() - cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /* right upper cell */
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.USER_CHECKER || firstNext.status == CellStatus.WHITE_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX + cBoard.cellSize, firstNext.cY - cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.USER_CHECKER || firstNext.getStatus() == CellStatus.WHITE_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() + cBoard.cellSize, firstNext.getcY() - cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /* right bottom cell */
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.USER_CHECKER || firstNext.status == CellStatus.WHITE_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX + cBoard.cellSize, firstNext.cY + cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.USER_CHECKER || firstNext.getStatus() == CellStatus.WHITE_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() + cBoard.cellSize, firstNext.getcY() + cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /* left bottom cell */
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.USER_CHECKER || firstNext.status == CellStatus.WHITE_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX - cBoard.cellSize, firstNext.cY + cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.USER_CHECKER || firstNext.getStatus() == CellStatus.WHITE_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() - cBoard.cellSize, firstNext.getcY() + cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
         }/* for comp queen */
-        if (cell.status == CellStatus.BLACK_QUEEN) {
+        if (cell.getStatus() == CellStatus.BLACK_QUEEN) {
             Cell tmpCell;
             /** Check top left diagonal from selected checker. When cells with status "2" ended, we check next cell - if it is enemy(status "3 (6)" ) 
              * we check next cell in diagonal, if it is grey cell(status "2") return true - queen should fight
              */
             int count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX - (cBoard.cellSize * count), cell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while ((tmpCell = getCellByCoordinates(cell.getcX() - cBoard.cellSize * count, cell.getcY() - cBoard.cellSize * count)).getStatus() == CellStatus.GREY) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX - cBoard.cellSize, tmpCell.cY - cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() - cBoard.cellSize, tmpCell.getcY() - cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check top right diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX + (cBoard.cellSize * count), cell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() + (cBoard.cellSize * count), cell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX + cBoard.cellSize, tmpCell.cY - cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() + cBoard.cellSize, tmpCell.getcY() - cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check bottom left diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX - (cBoard.cellSize * count), cell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() - (cBoard.cellSize * count), cell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX - cBoard.cellSize, tmpCell.cY + cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() - cBoard.cellSize, tmpCell.getcY() + cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check bottom right diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX + (cBoard.cellSize * count), cell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() + (cBoard.cellSize * count), cell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX + cBoard.cellSize, tmpCell.cY + cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() + cBoard.cellSize, tmpCell.getcY() + cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
         }
 
         /* for white checkers */
-        if (cell.status == CellStatus.USER_CHECKER || cell.status == CellStatus.ACTIVE) {
+        if (cell.getStatus() == CellStatus.USER_CHECKER || cell.getStatus() == CellStatus.ACTIVE) {
             /** left up next cell */
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.COMP_CHECKER || firstNext.status == CellStatus.BLACK_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX - cBoard.cellSize, firstNext.cY - cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.COMP_CHECKER || firstNext.getStatus() == CellStatus.BLACK_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() - cBoard.cellSize, firstNext.getcY() - cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** right up cell */
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.COMP_CHECKER || firstNext.status == CellStatus.BLACK_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX + cBoard.cellSize, firstNext.cY - cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.COMP_CHECKER || firstNext.getStatus() == CellStatus.BLACK_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() + cBoard.cellSize, firstNext.getcY() - cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** right bottom cell */
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.COMP_CHECKER || firstNext.status == CellStatus.BLACK_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX + cBoard.cellSize, firstNext.cY + cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.COMP_CHECKER || firstNext.getStatus() == CellStatus.BLACK_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() + cBoard.cellSize, firstNext.getcY() + cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** left bottom cell */
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.COMP_CHECKER || firstNext.status == CellStatus.BLACK_QUEEN) {
-                secondNext = getCellByCoordinates(firstNext.cX - cBoard.cellSize, firstNext.cY + cBoard.cellSize);
-                if (secondNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.COMP_CHECKER || firstNext.getStatus() == CellStatus.BLACK_QUEEN) {
+                secondNext = getCellByCoordinates(firstNext.getcX() - cBoard.cellSize, firstNext.getcY() + cBoard.cellSize);
+                if (secondNext.getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
         }
         /* for user queen and active queen */
-        if (cell.status == CellStatus.WHITE_QUEEN || cell.status == CellStatus.ACTIVE_QUEEN) {
+        if (cell.getStatus() == CellStatus.WHITE_QUEEN || cell.getStatus() == CellStatus.ACTIVE_QUEEN) {
             Cell tmpCell;
             /** Check top left diagonal from selected checker. When cells with status "2" ended, we check next cell - if it is enemy(status "4 (7)" ) 
              * we check next cell in diagonal, if it is grey cell(status "2") return true - queen should fight
              */
             int count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX - (cBoard.cellSize * count), cell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() - (cBoard.cellSize * count), cell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX - cBoard.cellSize, tmpCell.cY - cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() - cBoard.cellSize, tmpCell.getcY() - cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check top right diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX + (cBoard.cellSize * count), cell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() + (cBoard.cellSize * count), cell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX + cBoard.cellSize, tmpCell.cY - cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() + cBoard.cellSize, tmpCell.getcY() - cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check bottom left diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX - (cBoard.cellSize * count), cell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() - (cBoard.cellSize * count), cell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX - cBoard.cellSize, tmpCell.cY + cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() - cBoard.cellSize, tmpCell.getcY() + cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
             /** Check bottom right diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(cell.cX + (cBoard.cellSize * count), cell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(cell.getcX() + (cBoard.cellSize * count), cell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
-                if (getCellByCoordinates(tmpCell.cX + cBoard.cellSize, tmpCell.cY + cBoard.cellSize).status == CellStatus.GREY) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                if (getCellByCoordinates(tmpCell.getcX() + cBoard.cellSize, tmpCell.getcY() + cBoard.cellSize).getStatus() == CellStatus.GREY) {
                     return true;
                 }
             }
@@ -345,7 +354,7 @@ class Logic implements Runnable {
         Cell fighterCell = null;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             fighterCell = cBoard.cells[cCounter];
-            if ((fighterCell.status == CellStatus.COMP_CHECKER || fighterCell.status == CellStatus.BLACK_QUEEN) && isFighter(fighterCell)) {
+            if ((fighterCell.getStatus() == CellStatus.COMP_CHECKER || fighterCell.getStatus() == CellStatus.BLACK_QUEEN) && isFighter(fighterCell)) {
                 return fighterCell;
             }
         }
@@ -357,7 +366,7 @@ class Logic implements Runnable {
         Cell fighterCell;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             fighterCell = cBoard.cells[cCounter];
-            if ((fighterCell.status == CellStatus.USER_CHECKER || fighterCell.status == CellStatus.ACTIVE || fighterCell.status == CellStatus.WHITE_QUEEN || fighterCell.status == CellStatus.ACTIVE_QUEEN) && isFighter(fighterCell)) {
+            if ((fighterCell.getStatus() == CellStatus.USER_CHECKER || fighterCell.getStatus() == CellStatus.ACTIVE || fighterCell.getStatus() == CellStatus.WHITE_QUEEN || fighterCell.getStatus() == CellStatus.ACTIVE_QUEEN) && isFighter(fighterCell)) {
                 return fighterCell;
             }
         }
@@ -367,7 +376,7 @@ class Logic implements Runnable {
     Cell getUserStepper() {
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             Cell mCell = cBoard.cells[cCounter];
-            if ((mCell.status == CellStatus.USER_CHECKER || mCell.status == CellStatus.ACTIVE || mCell.status == CellStatus.WHITE_QUEEN || mCell.status == CellStatus.ACTIVE_QUEEN) && isMover(mCell)) {
+            if ((mCell.getStatus() == CellStatus.USER_CHECKER || mCell.getStatus() == CellStatus.ACTIVE || mCell.getStatus() == CellStatus.WHITE_QUEEN || mCell.getStatus() == CellStatus.ACTIVE_QUEEN) && isMover(mCell)) {
                 return mCell;
             }
         }
@@ -377,62 +386,62 @@ class Logic implements Runnable {
     private boolean isMover(Cell cell) {
         Cell firstNext;
         /* for black checkers */
-        if (cell.status == CellStatus.COMP_CHECKER) {
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+        if (cell.getStatus() == CellStatus.COMP_CHECKER) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
 
         }
-        if (cell.status == CellStatus.BLACK_QUEEN) {
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+        if (cell.getStatus() == CellStatus.BLACK_QUEEN) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
         }
         /* for white (user checkers) */
-        if (cell.status == CellStatus.USER_CHECKER || cell.status == CellStatus.ACTIVE) {
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+        if (cell.getStatus() == CellStatus.USER_CHECKER || cell.getStatus() == CellStatus.ACTIVE) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
 
         }
-        if (cell.status == CellStatus.WHITE_QUEEN || cell.status == CellStatus.ACTIVE_QUEEN) {
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+        if (cell.getStatus() == CellStatus.WHITE_QUEEN || cell.getStatus() == CellStatus.ACTIVE_QUEEN) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY - cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() - cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX - cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() - cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
-            firstNext = getCellByCoordinates(cell.cX + cBoard.cellSize, cell.cY + cBoard.cellSize);
-            if (firstNext.status == CellStatus.GREY) {
+            firstNext = getCellByCoordinates(cell.getcX() + cBoard.cellSize, cell.getcY() + cBoard.cellSize);
+            if (firstNext.getStatus() == CellStatus.GREY) {
                 return true;
             }
         }
@@ -443,7 +452,7 @@ class Logic implements Runnable {
         Cell stepperCell = null;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             stepperCell = cBoard.cells[cCounter];
-            if ((stepperCell.status == CellStatus.COMP_CHECKER || stepperCell.status == CellStatus.BLACK_QUEEN) && isMover(stepperCell)) {
+            if ((stepperCell.getStatus() == CellStatus.COMP_CHECKER || stepperCell.getStatus() == CellStatus.BLACK_QUEEN) && isMover(stepperCell)) {
                 return stepperCell;
             }
         }
@@ -455,23 +464,23 @@ class Logic implements Runnable {
         Cell victimCell;
         Cell targetCell;
 
-        if (fCell.status == CellStatus.COMP_CHECKER) {
+        if (fCell.getStatus() == CellStatus.COMP_CHECKER) {
             int randomSignX = getRandomSign();
-            int clickedXrand = fCell.cX + cBoard.cellSize * randomSignX;
-            int clickedY = fCell.cY + cBoard.cellSize;
-            int clickedXrev = fCell.cX + cBoard.cellSize * randomSignX * (-1);
-            int clickedYrev = fCell.cY - cBoard.cellSize;
+            int clickedXrand = fCell.getcX() + cBoard.cellSize * randomSignX;
+            int clickedY = fCell.getcY() + cBoard.cellSize;
+            int clickedXrev = fCell.getcX() + cBoard.cellSize * randomSignX * (-1);
+            int clickedYrev = fCell.getcY() - cBoard.cellSize;
 
             victimCell = getCellByCoordinates(clickedXrand, clickedY);
-            if (victimCell.status == CellStatus.USER_CHECKER || victimCell.status == CellStatus.WHITE_QUEEN) {
-                targetCell = getCellByCoordinates(victimCell.cX + cBoard.cellSize * randomSignX, victimCell.cY + cBoard.cellSize);
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell.status = CellStatus.GREY;
-                    targetCell.status = CellStatus.COMP_CHECKER;
+            if (victimCell.getStatus() == CellStatus.USER_CHECKER || victimCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                targetCell = getCellByCoordinates(victimCell.getcX() + cBoard.cellSize * randomSignX, victimCell.getcY() + cBoard.cellSize);
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell.setChecker(CellStatus.GREY);
+                    targetCell.setChecker(CellStatus.COMP_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.BLACK_QUEEN;
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
                     }
-                    fCell.status = CellStatus.GREY;
+                    fCell.setChecker(CellStatus.GREY);
                     cBoard.userCheckers--;
                     retCell[0] = victimCell;
                     retCell[1] = targetCell;
@@ -480,15 +489,15 @@ class Logic implements Runnable {
             }
             // if while did not breake we take opposite element by X
             victimCell = getCellByCoordinates(clickedXrev, clickedY);
-            if (victimCell.status == CellStatus.USER_CHECKER || victimCell.status == CellStatus.WHITE_QUEEN) {
-                targetCell = getCellByCoordinates(victimCell.cX + cBoard.cellSize * randomSignX * (-1), victimCell.cY + cBoard.cellSize);
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell.status = CellStatus.GREY;
-                    targetCell.status = CellStatus.COMP_CHECKER;
+            if (victimCell.getStatus() == CellStatus.USER_CHECKER || victimCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                targetCell = getCellByCoordinates(victimCell.getcX() + cBoard.cellSize * randomSignX * (-1), victimCell.getcY() + cBoard.cellSize);
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell.setChecker(CellStatus.GREY);
+                    targetCell.setChecker(CellStatus.COMP_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.BLACK_QUEEN;
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
                     }
-                    fCell.status = CellStatus.GREY;
+                    fCell.setChecker(CellStatus.GREY);
                     cBoard.userCheckers--;
                     retCell[0] = victimCell;
                     retCell[1] = targetCell;
@@ -497,15 +506,15 @@ class Logic implements Runnable {
             }
             ///////// The same for reverse fight (up by Y)
             victimCell = getCellByCoordinates(clickedXrand, clickedYrev);
-            if (victimCell.status == CellStatus.USER_CHECKER || victimCell.status == CellStatus.WHITE_QUEEN) {
-                targetCell = getCellByCoordinates(victimCell.cX + cBoard.cellSize * randomSignX, victimCell.cY - cBoard.cellSize);
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell.status = CellStatus.GREY;
-                    targetCell.status = CellStatus.COMP_CHECKER;
+            if (victimCell.getStatus() == CellStatus.USER_CHECKER || victimCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                targetCell = getCellByCoordinates(victimCell.getcX() + cBoard.cellSize * randomSignX, victimCell.getcY() - cBoard.cellSize);
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell.setChecker(CellStatus.GREY);
+                    targetCell.setChecker(CellStatus.COMP_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.BLACK_QUEEN;
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
                     }
-                    fCell.status = CellStatus.GREY;
+                    fCell.setChecker(CellStatus.GREY);
                     cBoard.userCheckers--;
                     retCell[0] = victimCell;
                     retCell[1] = targetCell;
@@ -514,15 +523,15 @@ class Logic implements Runnable {
             }
             // if while did not breake we take opposite element by X
             victimCell = getCellByCoordinates(clickedXrev, clickedYrev);
-            if (victimCell.status == CellStatus.USER_CHECKER || victimCell.status == CellStatus.WHITE_QUEEN) {
-                targetCell = getCellByCoordinates(victimCell.cX + cBoard.cellSize * randomSignX * (-1), victimCell.cY - cBoard.cellSize);
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell.status = CellStatus.GREY;
-                    targetCell.status = CellStatus.COMP_CHECKER;
+            if (victimCell.getStatus() == CellStatus.USER_CHECKER || victimCell.getStatus() == CellStatus.WHITE_QUEEN) {
+                targetCell = getCellByCoordinates(victimCell.getcX() + cBoard.cellSize * randomSignX * (-1), victimCell.getcY() - cBoard.cellSize);
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell.setChecker(CellStatus.GREY);
+                    targetCell.setChecker(CellStatus.COMP_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.BLACK_QUEEN;
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
                     }
-                    fCell.status = CellStatus.GREY;
+                    fCell.setChecker(CellStatus.GREY);
                     cBoard.userCheckers--;
                     retCell[0] = victimCell;
                     retCell[1] = targetCell;
@@ -530,22 +539,22 @@ class Logic implements Runnable {
                 }
             }
         }
-        if (fCell.status == CellStatus.BLACK_QUEEN) {
+        if (fCell.getStatus() == CellStatus.BLACK_QUEEN) {
             Cell tmpCell;
             int count = 1;
-            while (((tmpCell = getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                tmpCell = (getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count)));
-                while (((tmpCell = getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                tmpCell = (getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count)));
+                while (((tmpCell = getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     targetCell = tmpCell;
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.BLACK_QUEEN;
-                        fCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                        fCell.setChecker(CellStatus.GREY);
                         cBoard.userCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -556,19 +565,19 @@ class Logic implements Runnable {
             }
             /** Check top right diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                tmpCell = (getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count)));
-                while (((tmpCell = getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                tmpCell = (getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count)));
+                while (((tmpCell = getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     targetCell = tmpCell;
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.BLACK_QUEEN;
-                        fCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                        fCell.setChecker(CellStatus.GREY);
                         cBoard.userCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -579,20 +588,20 @@ class Logic implements Runnable {
             }
             /** Check bootom left diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                tmpCell = (getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count)));
+                tmpCell = (getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count)));
                 targetCell = tmpCell;
-                while (((tmpCell = getCellByCoordinates(fCell.cX - (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                while (((tmpCell = getCellByCoordinates(fCell.getcX() - (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     targetCell = tmpCell;
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.BLACK_QUEEN;
-                        fCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                        fCell.setChecker(CellStatus.GREY);
                         cBoard.userCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -603,18 +612,18 @@ class Logic implements Runnable {
             }
             /** Check bootom right diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.USER_CHECKER || tmpCell.status == CellStatus.WHITE_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.USER_CHECKER || tmpCell.getStatus() == CellStatus.WHITE_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                targetCell = (getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count)));
-                while (((tmpCell = getCellByCoordinates(fCell.cX + (cBoard.cellSize * count), fCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                targetCell = (getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count)));
+                while (((tmpCell = getCellByCoordinates(fCell.getcX() + (cBoard.cellSize * count), fCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.BLACK_QUEEN;
-                        fCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                        fCell.setChecker(CellStatus.GREY);
                         cBoard.userCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -635,18 +644,18 @@ class Logic implements Runnable {
         Cell retCell[] = {new Cell(CellStatus.NONE), new Cell(CellStatus.NONE)};
         Cell victimCell;
 
-        if (activeCell.status == CellStatus.ACTIVE) {
+        if (activeCell.getStatus() == CellStatus.ACTIVE) {
             /* Verify that second upper left cell from our active checker is free   */
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX - 2 * cBoard.cellSize, activeCell.cY - 2 * cBoard.cellSize))) {
-                if (targetCell.status == CellStatus.GREY) {
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() - 2 * cBoard.cellSize, activeCell.getcY() - 2 * cBoard.cellSize))) {
+                if (targetCell.getStatus() == CellStatus.GREY) {
                     /* Verify that first upper left cell from our active checker is enemy (status 4 or 7) */
-                    victimCell = getCellByCoordinates(activeCell.cX - cBoard.cellSize, activeCell.cY - cBoard.cellSize);
-                    if (victimCell.status == CellStatus.COMP_CHECKER || victimCell.status == CellStatus.BLACK_QUEEN) {
-                        activeCell.status = CellStatus.GREY;
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.USER_CHECKER;
+                    victimCell = getCellByCoordinates(activeCell.getcX() - cBoard.cellSize, activeCell.getcY() - cBoard.cellSize);
+                    if (victimCell.getStatus() == CellStatus.COMP_CHECKER || victimCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                        activeCell.setChecker(CellStatus.GREY);
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.USER_CHECKER);
                         if (checkQeen(targetCell)) {
-                            targetCell.status = CellStatus.WHITE_QUEEN;
+                            targetCell.setChecker(CellStatus.WHITE_QUEEN);
                         }
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
@@ -657,15 +666,15 @@ class Logic implements Runnable {
                 }
 
             }
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX + 2 * cBoard.cellSize, activeCell.cY - 2 * cBoard.cellSize))) {
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell = getCellByCoordinates(activeCell.cX + cBoard.cellSize, activeCell.cY - cBoard.cellSize);
-                    if (victimCell.status == CellStatus.COMP_CHECKER || victimCell.status == CellStatus.BLACK_QUEEN) {
-                        activeCell.status = CellStatus.GREY;
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.USER_CHECKER;
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() + 2 * cBoard.cellSize, activeCell.getcY() - 2 * cBoard.cellSize))) {
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell = getCellByCoordinates(activeCell.getcX() + cBoard.cellSize, activeCell.getcY() - cBoard.cellSize);
+                    if (victimCell.getStatus() == CellStatus.COMP_CHECKER || victimCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                        activeCell.setChecker(CellStatus.GREY);
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.USER_CHECKER);
                         if (checkQeen(targetCell)) {
-                            targetCell.status = CellStatus.WHITE_QUEEN;
+                            targetCell.setChecker(CellStatus.WHITE_QUEEN);
                         }
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
@@ -680,15 +689,15 @@ class Logic implements Runnable {
                  * left bottom cell 
                  */
             }
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX - 2 * cBoard.cellSize, activeCell.cY + 2 * cBoard.cellSize))) {
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell = getCellByCoordinates(activeCell.cX - cBoard.cellSize, activeCell.cY + cBoard.cellSize);
-                    if (victimCell.status == CellStatus.COMP_CHECKER || victimCell.status == CellStatus.BLACK_QUEEN) {
-                        activeCell.status = CellStatus.GREY;
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.USER_CHECKER;
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() - 2 * cBoard.cellSize, activeCell.getcY() + 2 * cBoard.cellSize))) {
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell = getCellByCoordinates(activeCell.getcX() - cBoard.cellSize, activeCell.getcY() + cBoard.cellSize);
+                    if (victimCell.getStatus() == CellStatus.COMP_CHECKER || victimCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                        activeCell.setChecker(CellStatus.GREY);
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.USER_CHECKER);
                         if (checkQeen(targetCell)) {
-                            targetCell.status = CellStatus.WHITE_QUEEN;
+                            targetCell.setChecker(CellStatus.WHITE_QUEEN);
                         }
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
@@ -698,15 +707,15 @@ class Logic implements Runnable {
                 }
 
                 /* right bottom cell */            }
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX + 2 * cBoard.cellSize, activeCell.cY + 2 * cBoard.cellSize))) {                
-                if (targetCell.status == CellStatus.GREY) {
-                    victimCell = getCellByCoordinates(activeCell.cX + cBoard.cellSize, activeCell.cY + cBoard.cellSize);
-                    if (victimCell.status == CellStatus.COMP_CHECKER || victimCell.status == CellStatus.BLACK_QUEEN) {
-                        activeCell.status = CellStatus.GREY;
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.USER_CHECKER;
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() + 2 * cBoard.cellSize, activeCell.getcY() + 2 * cBoard.cellSize))) {
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    victimCell = getCellByCoordinates(activeCell.getcX() + cBoard.cellSize, activeCell.getcY() + cBoard.cellSize);
+                    if (victimCell.getStatus() == CellStatus.COMP_CHECKER || victimCell.getStatus() == CellStatus.BLACK_QUEEN) {
+                        activeCell.setChecker(CellStatus.GREY);
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.USER_CHECKER);
                         if (checkQeen(targetCell)) {
-                            targetCell.status = CellStatus.WHITE_QUEEN;
+                            targetCell.setChecker(CellStatus.WHITE_QUEEN);
                         }
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
@@ -716,7 +725,7 @@ class Logic implements Runnable {
                 }
             }
         }
-        if (activeCell.status == CellStatus.ACTIVE_QUEEN) {
+        if (activeCell.getStatus() == CellStatus.ACTIVE_QUEEN) {
             Cell tmpCell;
             /** Check top left diagonal from selected cell. When cells with status "2" ended, we check next cell - if it is enemy(status "4 (7)" ) 
              * we check next cell in diagonal, if it is grey cell(status "2") return true - queen should fight
@@ -724,17 +733,17 @@ class Logic implements Runnable {
              * top left diagonal 
              */            
             int count = 1;
-            while (((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                while (((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                while (((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.WHITE_QUEEN;
-                        activeCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
+                        activeCell.setChecker(CellStatus.GREY);
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -745,17 +754,17 @@ class Logic implements Runnable {
             }
             /** Check top right diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                while (((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                while (((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.WHITE_QUEEN;
-                        activeCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
+                        activeCell.setChecker(CellStatus.GREY);
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -766,17 +775,17 @@ class Logic implements Runnable {
             }
             /** Check bootom left diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                while (((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                while (((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.WHITE_QUEEN;
-                        activeCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
+                        activeCell.setChecker(CellStatus.GREY);
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -787,17 +796,17 @@ class Logic implements Runnable {
             }
             /** Check bootom right diagonal from selected checker.  */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 count++;
             }
-            if (tmpCell.status == CellStatus.COMP_CHECKER || tmpCell.status == CellStatus.BLACK_QUEEN) {
+            if (tmpCell.getStatus() == CellStatus.COMP_CHECKER || tmpCell.getStatus() == CellStatus.BLACK_QUEEN) {
                 count++;
                 victimCell = tmpCell;
-                while (((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+                while (((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                     if (targetCell.equals(tmpCell)) {
-                        victimCell.status = CellStatus.GREY;
-                        targetCell.status = CellStatus.WHITE_QUEEN;
-                        activeCell.status = CellStatus.GREY;
+                        victimCell.setChecker(CellStatus.GREY);
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
+                        activeCell.setChecker(CellStatus.GREY);
                         cBoard.compCheckers--;
                         retCell[0] = victimCell;
                         retCell[1] = targetCell;
@@ -815,33 +824,33 @@ class Logic implements Runnable {
     /** Computer move */
     private Cell move(Cell mCell) {
         Random random = new Random();
-        if (mCell.status == CellStatus.COMP_CHECKER) {
+        if (mCell.getStatus() == CellStatus.COMP_CHECKER) {
             int randomSignX = getRandomSign();
-            int clickedXrand = mCell.cX + cBoard.cellSize * randomSignX;
-            int clickedY = mCell.cY + cBoard.cellSize;
-            int clickedXrev = mCell.cX - cBoard.cellSize * randomSignX;
+            int clickedXrand = mCell.getcX() + cBoard.cellSize * randomSignX;
+            int clickedY = mCell.getcY() + cBoard.cellSize;
+            int clickedXrev = mCell.getcX() - cBoard.cellSize * randomSignX;
             Cell targetCell;
 
             targetCell = getCellByCoordinates(clickedXrand, clickedY);
-            if (targetCell.status == CellStatus.GREY) {
-                targetCell.status = CellStatus.COMP_CHECKER;
+            if (targetCell.getStatus() == CellStatus.GREY) {
+                targetCell.setChecker(CellStatus.COMP_CHECKER);
                 if (checkQeen(targetCell)) {
-                    targetCell.status = CellStatus.BLACK_QUEEN;
+                    targetCell.setChecker(CellStatus.BLACK_QUEEN);
                 }
-                mCell.status = CellStatus.GREY;
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
             targetCell = getCellByCoordinates(clickedXrev, clickedY);
-            if (targetCell.status == CellStatus.GREY) {
-                targetCell.status = CellStatus.COMP_CHECKER;
+            if (targetCell.getStatus() == CellStatus.GREY) {
+                targetCell.setChecker(CellStatus.COMP_CHECKER);
                 if (checkQeen(targetCell)) {
-                    targetCell.status = CellStatus.BLACK_QUEEN;
+                    targetCell.setChecker(CellStatus.BLACK_QUEEN);
                 }
-                mCell.status = CellStatus.GREY;
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
         }
-        if (mCell.status == CellStatus.BLACK_QUEEN) {
+        if (mCell.getStatus() == CellStatus.BLACK_QUEEN) {
             Cell tmpCell;
             Cell targetCell;
             Cell queenPossibleStep[] = new Cell[8];
@@ -854,50 +863,50 @@ class Logic implements Runnable {
              * top left
              */
             int count = 1;
-            while (((tmpCell = getCellByCoordinates(mCell.cX - (cBoard.cellSize * count), mCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(mCell.getcX() - (cBoard.cellSize * count), mCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 queenPossibleStep[count - 1] = tmpCell;
                 count++;
             }
-            if (queenPossibleStep[0].status != CellStatus.NONE) {
+            if (queenPossibleStep[0].getStatus() != CellStatus.NONE) {
                 targetCell = queenPossibleStep[random.nextInt(count - 1)];
-                targetCell.status = CellStatus.BLACK_QUEEN;
-                mCell.status = CellStatus.GREY;
+                targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
             /** Check top right diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(mCell.cX + (cBoard.cellSize * count), mCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(mCell.getcX() + (cBoard.cellSize * count), mCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 queenPossibleStep[count - 1] = tmpCell;
                 count++;
             }
-            if (queenPossibleStep[0].status != CellStatus.NONE) {
+            if (queenPossibleStep[0].getStatus() != CellStatus.NONE) {
                 targetCell = queenPossibleStep[random.nextInt(count - 1)];
-                targetCell.status = CellStatus.BLACK_QUEEN;
-                mCell.status = CellStatus.GREY;
+                targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
             /** Check bottom left diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(mCell.cX - (cBoard.cellSize * count), mCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(mCell.getcX() - (cBoard.cellSize * count), mCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 queenPossibleStep[count - 1] = tmpCell;
                 count++;
             }
-            if (queenPossibleStep[0].status != CellStatus.NONE) {
+            if (queenPossibleStep[0].getStatus() != CellStatus.NONE) {
                 targetCell = queenPossibleStep[random.nextInt(count - 1)];
-                targetCell.status = CellStatus.BLACK_QUEEN;
-                mCell.status = CellStatus.GREY;
+                targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
             /** Check bottom left diagonal from selected checker */
             count = 1;
-            while (((tmpCell = getCellByCoordinates(mCell.cX + (cBoard.cellSize * count), mCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY)) {
+            while (((tmpCell = getCellByCoordinates(mCell.getcX() + (cBoard.cellSize * count), mCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY)) {
                 queenPossibleStep[count - 1] = tmpCell;
                 count++;
             }
-            if (queenPossibleStep[0].status != CellStatus.NONE) {
+            if (queenPossibleStep[0].getStatus() != CellStatus.NONE) {
                 targetCell = queenPossibleStep[random.nextInt(count - 1)];
-                targetCell.status = CellStatus.BLACK_QUEEN;
-                mCell.status = CellStatus.GREY;
+                targetCell.setChecker(CellStatus.BLACK_QUEEN);
+                mCell.setChecker(CellStatus.GREY);
                 return targetCell;
             }
         }
@@ -906,88 +915,73 @@ class Logic implements Runnable {
 
     /** User move */
     private Cell move(Cell activeCell, Cell targetCell) {
-        if (activeCell.status == CellStatus.ACTIVE) {
+        if (activeCell.getStatus() == CellStatus.ACTIVE) {
             /** Target cell is top upper left cell from our active cell, check it, and it is free - paint by own checker
                 top left
              */            
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX - cBoard.cellSize, activeCell.cY - cBoard.cellSize))) {                
-                if (targetCell.status == CellStatus.GREY) {
-                    targetCell.status = CellStatus.USER_CHECKER;
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() - cBoard.cellSize, activeCell.getcY() - cBoard.cellSize))) {
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    targetCell.setChecker(CellStatus.USER_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.WHITE_QUEEN;
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
                     }
-                    activeCell.status = CellStatus.GREY;
+                    activeCell.setChecker(CellStatus.GREY);
                     return targetCell;
                 }
             }
-            if (targetCell.equals(getCellByCoordinates(activeCell.cX + cBoard.cellSize, activeCell.cY - cBoard.cellSize))) {
+            if (targetCell.equals(getCellByCoordinates(activeCell.getcX() + cBoard.cellSize, activeCell.getcY() - cBoard.cellSize))) {
                 /**  top right */
-                if (targetCell.status == CellStatus.GREY) {
-                    targetCell.status = CellStatus.USER_CHECKER;
+                if (targetCell.getStatus() == CellStatus.GREY) {
+                    targetCell.setChecker(CellStatus.USER_CHECKER);
                     if (checkQeen(targetCell)) {
-                        targetCell.status = CellStatus.WHITE_QUEEN;
+                        targetCell.setChecker(CellStatus.WHITE_QUEEN);
                     }
-                    activeCell.status = CellStatus.GREY;
+                    activeCell.setChecker(CellStatus.GREY);
                     return targetCell;
                 }
             }
         }
-        if (activeCell.status == CellStatus.ACTIVE_QUEEN) {
+        if (activeCell.getStatus() == CellStatus.ACTIVE_QUEEN) {
             Cell tmpCell;
             /** Check top left diagonal from selected checker */
             int count = 1;
-            while ((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY) {
+            while ((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY) {
                 if (tmpCell.equals(targetCell)) {
-                    activeCell.status = CellStatus.GREY;
-                    tmpCell.status = CellStatus.WHITE_QUEEN;
+                    activeCell.setChecker(CellStatus.GREY);
+                    tmpCell.setChecker(CellStatus.WHITE_QUEEN);
                     return tmpCell;
                 }
                 count++;
             }
             /** Check top right diagonal from selected checker */
             count = 1;
-            while ((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY - (cBoard.cellSize * count))).status == CellStatus.GREY) {
+            while ((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() - (cBoard.cellSize * count))).getStatus() == CellStatus.GREY) {
                 if (tmpCell.equals(targetCell)) {
-                    activeCell.status = CellStatus.GREY;
-                    tmpCell.status = CellStatus.WHITE_QUEEN;
+                    activeCell.setChecker(CellStatus.GREY);
+                    tmpCell.setChecker(CellStatus.WHITE_QUEEN);
                     return tmpCell;
                 }
                 count++;
             }
             /** Check bottom left diagonal from selected checker */
             count = 1;
-            while ((tmpCell = getCellByCoordinates(activeCell.cX - (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY) {
+            while ((tmpCell = getCellByCoordinates(activeCell.getcX() - (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY) {
                 if (tmpCell.equals(targetCell)) {
-                    activeCell.status = CellStatus.GREY;
-                    tmpCell.status = CellStatus.WHITE_QUEEN;
+                    activeCell.setChecker(CellStatus.GREY);
+                    tmpCell.setChecker(CellStatus.WHITE_QUEEN);
                     return tmpCell;
                 }
                 count++;
             }
             /** Check bottom right diagonal from selected checker */
             count = 1;
-            while ((tmpCell = getCellByCoordinates(activeCell.cX + (cBoard.cellSize * count), activeCell.cY + (cBoard.cellSize * count))).status == CellStatus.GREY) {
+            while ((tmpCell = getCellByCoordinates(activeCell.getcX() + (cBoard.cellSize * count), activeCell.getcY() + (cBoard.cellSize * count))).getStatus() == CellStatus.GREY) {
                 if (tmpCell.equals(targetCell)) {
-                    activeCell.status = CellStatus.GREY;
-                    tmpCell.status = CellStatus.WHITE_QUEEN;
+                    activeCell.setChecker(CellStatus.GREY);
+                    tmpCell.setChecker(CellStatus.WHITE_QUEEN);
                     return tmpCell;
                 }
                 count++;
-            }
-        }
-        return new Cell(CellStatus.NONE);
-    }
-    
-    /** Search cell in array of cells. If cell with such coordinates exists, return it. If not - create new cell and set it's status like "0" */
-    Cell getCellByCoordinates(int clickedX, int clickedY) {
-        Cell tmpCell;
-        for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
-            tmpCell = cBoard.cells[cCounter];
-            if ((clickedX >= (tmpCell.cX))
-                    & (clickedX < (tmpCell.cX + cBoard.cellSize))
-                    & (clickedY >= (tmpCell.cY))
-                    & (clickedY < (tmpCell.cY + cBoard.cellSize))) {
-                return tmpCell;
             }
         }
         return new Cell(CellStatus.NONE);
@@ -996,32 +990,21 @@ class Logic implements Runnable {
     private boolean checkQeen(Cell cell) {
         String userIndexQ[] = {"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"};
         String compIndexQ[] = {"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"};
-        if (cell.status == CellStatus.USER_CHECKER) {
+        if (cell.getStatus() == CellStatus.USER_CHECKER) {
             for (int i = 0; i < userIndexQ.length; i++) {
-                if (userIndexQ[i].equals(cell.index)) {
+                if (userIndexQ[i].equals(cell.getIndex())) {
                     return true;
                 }
             }
         }
-        if (cell.status == CellStatus.COMP_CHECKER) {
+        if (cell.getStatus() == CellStatus.COMP_CHECKER) {
             for (int i = 0; i < userIndexQ.length; i++) {
-                if (compIndexQ[i].equals(cell.index)) {
+                if (compIndexQ[i].equals(cell.getIndex())) {
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    Cell getActiveCell() {
-        Cell cell;
-        for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
-            cell = cBoard.cells[cCounter];
-            if (cell.status == CellStatus.ACTIVE || cell.status == CellStatus.ACTIVE_QUEEN) {
-                return cell;
-            }
-        }
-        return new Cell(CellStatus.NONE);
     }
     
     void shuffleCells() {
@@ -1030,9 +1013,4 @@ class Logic implements Runnable {
         cBoard.cells = list.toArray(cBoard.cells);
     }
 
-    Logic(ChessBoard cBoard, Menu menu) {
-        this.cBoard = cBoard;
-        this.menu = menu;
-        initTurkishArr();
-    }
 }

@@ -1,5 +1,7 @@
 package ru.javatalks.checkers;
 
+import ru.javatalks.checkers.model.Cell;
+
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
@@ -132,10 +134,10 @@ class ChessBoard extends JPanel {
 
         for (int cCount = 0; cCount < cellNum; cCount++) {
             Cell cell = cells[cCount];
-            checkerX = cell.cX + cellSize / 2 - checkerDiameter / 2;
-            checkerY = cell.cY + cellSize / 2 - checkerDiameter / 2;
+            checkerX = cell.getcX() + cellSize / 2 - checkerDiameter / 2;
+            checkerY = cell.getcY() + cellSize / 2 - checkerDiameter / 2;
 
-            cell.status.paintCell(graphics, cell);
+            cell.getStatus().paintCell(graphics, cell);
         }
         this.setPreferredSize(preferredSize);
         repaint();
@@ -155,13 +157,13 @@ class ChessBoard extends JPanel {
         int compNum = 0;
         int userNum = 0;
         for (int i = 0; i < cells.length; i++) {
-            if (cells[i].status == CellStatus.COMP_CHECKER || cells[i].status == CellStatus.BLACK_QUEEN) {
+            if (cells[i].getStatus() == CellStatus.COMP_CHECKER || cells[i].getStatus() == CellStatus.BLACK_QUEEN) {
                 compNum++;
             }
-            if (cells[i].status == CellStatus.USER_CHECKER
-                    || cells[i].status == CellStatus.ACTIVE
-                    || cells[i].status == CellStatus.WHITE_QUEEN
-                    || cells[i].status == CellStatus.ACTIVE_QUEEN) {
+            if (cells[i].getStatus() == CellStatus.USER_CHECKER
+                    || cells[i].getStatus() == CellStatus.ACTIVE
+                    || cells[i].getStatus() == CellStatus.WHITE_QUEEN
+                    || cells[i].getStatus() == CellStatus.ACTIVE_QUEEN) {
                 userNum++;
             }
         }
