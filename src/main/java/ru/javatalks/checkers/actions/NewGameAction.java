@@ -1,7 +1,7 @@
 package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.javatalks.checkers.Menu;
+import ru.javatalks.checkers.Dialog;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -15,10 +15,10 @@ import java.awt.event.ActionEvent;
 public class NewGameAction extends AbstractAction {
 
     @Autowired
-    private Menu menu;
+    private Dialog dialog;
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        menu.restartGame();
+        dialog.restartGame();
     }
 }

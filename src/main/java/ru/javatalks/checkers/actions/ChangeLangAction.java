@@ -2,7 +2,7 @@ package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.javatalks.checkers.Language;
-import ru.javatalks.checkers.Menu;
+import ru.javatalks.checkers.Dialog;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -18,13 +18,13 @@ public class ChangeLangAction extends AbstractAction {
     private final Language language;
 
     @Autowired
-    private Menu menu;
+    private Dialog dialog;
 
     public ChangeLangAction(Language language) {
         this.language = language;
     }
 
     public void actionPerformed(ActionEvent e) {
-        menu.setLanguage(language);
+        dialog.setLanguage(language);
     }
 }

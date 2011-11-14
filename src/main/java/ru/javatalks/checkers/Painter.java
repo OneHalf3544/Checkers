@@ -3,11 +3,7 @@ package ru.javatalks.checkers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.javatalks.checkers.model.Cell;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import ru.javatalks.checkers.model.ChessBoardModel;
 
 /** 
  * This class provides the painter for checkers
@@ -15,20 +11,22 @@ import java.util.Random;
  * @author Kapellan
  */
 @Service
-class Painter implements Runnable {
+class Painter {
 
-    private Menu menu;
-    private String userResultCheckersNum;
+    private final Dialog dialog;
+    
+    @Autowired
+    private ChessBoardModel chessBoardModel;
 
     @Autowired
-    Painter(Menu menu) {
-        this.menu = menu;
+    Painter(Dialog dialog) {
+        this.dialog = dialog;
     }
 
     public void run() {
         compStep();
-        menu.tArea.append(menu.stepUserText + "\n");
-        menu.tArea.setCaretPosition(menu.tArea.getDocument().getLength());
+        dialog.tArea.append(dialog.stepUserText + "\n");
+        dialog.tArea.setCaretPosition(dialog.tArea.getDocument().getLength());
     }
 
     void userStep(Cell activeCell, Cell targetCell) {
@@ -38,8 +36,8 @@ class Painter implements Runnable {
          * but we selected other checker, which is not fighter
          */
         if (getUserFighter().getStatus() != CellStatus.NONE && isFighter(activeCell) == false) {
-            menu.resultBuf = menu.userHasFighterText + getUserFighter().getIndex() + "\n";
-            menu.customResult();
+            dialog.resultBuf = dialog.userHasFighterText + getUserFighter().getIndex() + "\n";
+            dialog.customResult();
             return;
         }
 
@@ -52,23 +50,23 @@ class Painter implements Runnable {
             }
             activeCell = actCells[1];
             if (activeCell.getStatus() == CellStatus.NONE) {
-                menu.resultBuf = menu.userMustFightText + "\n";
-                menu.customResult();
+                dialog.resultBuf = dialog.userMustFightText + "\n";
+                dialog.customResult();
                 return;
             }
 
             addToTurkishArr(victimCell);
             if (isFighter(activeCell)) {
-                menu.act.setActiveCell(activeCell);
+                dialog.act.setActiveCell(activeCell);
                 inActionFlag = true;
                 userResultCheckersNum += ":" + activeCell.getIndex();
                 return;
             } else {
-                menu.act.resetActiveCell();
+                dialog.act.resetActiveCell();
                 inActionFlag = false;
                 userResultCheckersNum += ":" + activeCell.getIndex();
-                menu.resultBuf = userResultCheckersNum + "\n";
-                menu.customResult();
+                dialog.resultBuf = userResultCheckersNum + "\n";
+                dialog.customResult();
                 nextStepCompFlag = true;
                 return;
 
@@ -79,26 +77,26 @@ class Painter implements Runnable {
         if (isMover(activeCell)) {
             Cell mCell = move(activeCell, targetCell);
             if (mCell.getStatus() == CellStatus.USER_CHECKER || mCell.getStatus() == CellStatus.WHITE_QUEEN) {
-                menu.resultBuf = activeCell.getIndex() + ":" + mCell.getIndex() + "\n";
+                dialog.resultBuf = activeCell.getIndex() + ":" + mCell.getIndex() + "\n";
                 nextStepCompFlag = true;
             } else {
-                menu.resultBuf = menu.wrongNextCellText + "\n";
+                dialog.resultBuf = dialog.wrongNextCellText + "\n";
             }
-            menu.customResult();
-            menu.tArea.setCaretPosition(menu.tArea.getDocument().getLength());
+            dialog.customResult();
+            dialog.tArea.setCaretPosition(dialog.tArea.getDocument().getLength());
             return;
         }
     } // End of userStep
 
 
     void compStep() {
-        menu.resultBuf = menu.stepCompText + "\n";
+        dialog.resultBuf = dialog.stepCompText + "\n";
         activeCell = getCompFighter();
         if (activeCell.getStatus() != CellStatus.NONE) {
             do {
-                menu.resultBuf += activeCell.getIndex();
+                dialog.resultBuf += activeCell.getIndex();
                 if (isFighter(activeCell)) {
-                    menu.resultBuf += ":";
+                    dialog.resultBuf += ":";
                 }
                 actCells = fight(activeCell);
                 victimCell = actCells[0];
@@ -107,21 +105,21 @@ class Painter implements Runnable {
                     addToTurkishArr(victimCell);
                 }
             } while (activeCell.getStatus() != CellStatus.NONE);
-            menu.resultBuf += "\n";
+            dialog.resultBuf += "\n";
             resetTurkishArr();
-            menu.customResult();
-            menu.tArea.setCaretPosition(menu.tArea.getDocument().getLength());
+            dialog.customResult();
+            dialog.tArea.setCaretPosition(dialog.tArea.getDocument().getLength());
             nextStepCompFlag = false;
             return;
         }
         activeCell = getCompStepper();
         if (activeCell.getStatus() != CellStatus.NONE) {
-            menu.resultBuf += activeCell.getIndex();
+            dialog.resultBuf += activeCell.getIndex();
             activeCell = move(activeCell);
-            menu.resultBuf += ":" + activeCell.getIndex();
-            menu.resultBuf += "\n";
-            menu.customResult();
-            menu.tArea.setCaretPosition(menu.tArea.getDocument().getLength());
+            dialog.resultBuf += ":" + activeCell.getIndex();
+            dialog.resultBuf += "\n";
+            dialog.customResult();
+            dialog.tArea.setCaretPosition(dialog.tArea.getDocument().getLength());
             return;
         }
     }

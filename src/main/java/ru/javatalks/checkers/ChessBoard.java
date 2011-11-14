@@ -1,6 +1,7 @@
 package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.model.ChessBoardModel;
 
 import javax.swing.*;
@@ -13,7 +14,8 @@ import static ru.javatalks.checkers.model.ChessBoardModel.CELL_SIDE_NUM;
  *  
  * @author Kapellan
  */
-class ChessBoard extends JPanel {
+@Component
+public class ChessBoard extends JPanel {
 
     @Autowired
     private ChessBoardModel chessBoardModel;
@@ -21,21 +23,18 @@ class ChessBoard extends JPanel {
     private final CellStatus[][] cells = new CellStatus[CELL_SIDE_NUM][CELL_SIDE_NUM];
 
     /* The offset from left and top frame bounds  */
-    private static final int offsetLeftBound = -30;
-    private static final int offsetTopBound = -30;
+    private static final int OFFSET_LEFT_BOUND = -30;
 
-    /* CellSize is a size of chess board cell, it is a square so all sides are same */
-    static final int CELL_SIZE = 55;
+    private static final int OFFSET_TOP_BOUND = -30;
 
     private final Dimension preferredSize
-            = new Dimension(CELL_SIDE_NUM * CELL_SIZE + CELL_SIZE, CELL_SIDE_NUM * CELL_SIZE + CELL_SIZE);
+            = new Dimension(CELL_SIDE_NUM * CellStatus.CELL_SIZE + CellStatus.CELL_SIZE, CELL_SIDE_NUM * CellStatus.CELL_SIZE + CellStatus.CELL_SIZE);
     
     /* Those arrays we use in  makeIndex() method and in painting numbers of chess board in method paint()*/
-    private final String[] literals = {"NULL", "a", "b", "c", "d", "e", "f", "g", "h"};//
-    private final int[] reversNumbers = {0, 8, 7, 6, 5, 4, 3, 2, 1};
+    private final String[] literals = {"a", "b", "c", "d", "e", "f", "g", "h"};
+    private final String[] numbers = {"8", "7", "6", "5", "4", "3", "2", "1"};
 
-    ChessBoard() {
-        int cellCount = 0;
+    public ChessBoard() {
         /* The cycle of vertical rows painting */
         for (int v = 0; v < CELL_SIDE_NUM; v++) {
             for (int h = 0; h < CELL_SIDE_NUM; h++) {
@@ -56,8 +55,7 @@ class ChessBoard extends JPanel {
         }
         this.setMinimumSize(preferredSize);
         this.setPreferredSize(preferredSize);
-
-    }// End of constructor
+    }
 
     @Override
     public void paintComponent(Graphics g) {
@@ -68,33 +66,30 @@ class ChessBoard extends JPanel {
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         Font font = new Font("Dialog", Font.PLAIN, 14);
         graphics.setFont(font);
+        
+        drawIndexesMark(graphics);
 
-        /* This cycle make's numbers and literals near chess board bounds */
-        for (int i = 1; i <= CELL_SIDE_NUM; i++) {
-            /* horizontal number */
-            graphics.drawString(Integer.toString(reversNumbers[i]), offsetLeftBound + 40, offsetTopBound + i * CELL_SIZE + 30);
-            /* vertical literal */
-            graphics.drawString(literals[i], offsetLeftBound + i * CELL_SIZE + 20, offsetTopBound + 50);
-        }
 
         for (int x = 0; x < CELL_SIDE_NUM; x++) {
             for (int y = 0; y < CELL_SIDE_NUM; y++) {
-                CellStatus cell = cells[x][y];
-                cell.paintCell(graphics, cell);
+                cells[x][y].paintCell((Graphics2D) graphics.create(
+                        OFFSET_LEFT_BOUND + x * CellStatus.CELL_SIZE,
+                        OFFSET_TOP_BOUND + y * CellStatus.CELL_SIZE,
+                        CellStatus.CELL_SIZE,
+                        CellStatus.CELL_SIZE));
             }
         }
         this.setPreferredSize(preferredSize);
         repaint();
     }
 
-    /**
-     * This method make alphabet-digital index of any cell
-     * @param indexLiteralX x coordinate
-     * @param indexDigitY y coordinate
-     * @return The name of cell, specified by indexes
-     */
-    private String makeIndex(int indexLiteralX, int indexDigitY) {
-        return literals[indexLiteralX] + Integer.toString(reversNumbers[indexDigitY]);
+    private void drawIndexesMark(Graphics2D graphics) {
+        /* This cycle make the numbers and literals near chess board bounds */
+        for (int i = 0; i < CELL_SIDE_NUM; i++) {
+            /* horizontal number */
+            graphics.drawString(numbers[i], OFFSET_LEFT_BOUND + 40, OFFSET_TOP_BOUND + i * CellStatus.CELL_SIZE + 30);
+            /* vertical literal */
+            graphics.drawString(literals[i], OFFSET_LEFT_BOUND + i * CellStatus.CELL_SIZE + 20, OFFSET_TOP_BOUND + 50);
+        }
     }
-
 }

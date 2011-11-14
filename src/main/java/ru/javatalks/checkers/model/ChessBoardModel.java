@@ -81,6 +81,19 @@ public class ChessBoardModel implements Iterable<Cell> {
         return userCheckerNumber;
     }
 
+    public boolean hasCheckerOf(Player player) {
+        for (Cell cell : this) {
+            if (cell.getChecker() != null && cell.getChecker().getOwner() == player) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canStep(Player player) {
+        return false;
+    }
+
     private class CellIterator implements Iterator<Cell> {
         
         private int index = 0;

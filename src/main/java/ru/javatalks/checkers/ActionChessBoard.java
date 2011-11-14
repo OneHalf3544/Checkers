@@ -38,10 +38,8 @@ class ActionChessBoard extends MouseAdapter {
                 return;
             }
 
-            /* If was click on deactive checker, but we hawe active checker, active becomes deactive, and deactive becomes active */
-            if (selectingFlag
-                    && (clickedCell.getStatus() == CellStatus.USER_CHECKER
-                    || clickedCell.getStatus() == CellStatus.WHITE_QUEEN)) {
+            /* If was click on non active checker, but we have active checker, active becomes non active, and deactive becomes active */
+            if (selectingFlag && clickedCell.hasUserChecker()) {
                 resetActiveCell();
                 setActiveCell(clickedCell);
                 return;
@@ -51,7 +49,7 @@ class ActionChessBoard extends MouseAdapter {
             if (selectingFlag) {
                 Cell activeCell = getActiveCell();
                 painter.userStep(activeCell, clickedCell);
-                if (painter.nextStepCompFlag == true) {
+                if (painter.nextStepCompFlag) {
                     Thread thread = new Thread(painter);
                     thread.start();
                 }
@@ -109,9 +107,9 @@ class ActionChessBoard extends MouseAdapter {
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
             Cell tmpCell = cBoard.cells[cCounter];
             if (clickedX >= tmpCell.cX
-                    & clickedX < tmpCell.cX + ChessBoard.CELL_SIZE
+                    & clickedX < tmpCell.cX + CellStatus.CELL_SIZE
                     & clickedY >= tmpCell.cY
-                    & clickedY < tmpCell.cY + ChessBoard.CELL_SIZE) {
+                    & clickedY < tmpCell.cY + CellStatus.CELL_SIZE) {
                 return tmpCell;
             }
         }

@@ -1,14 +1,18 @@
 package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ru.javatalks.checkers.actions.*;
 import ru.javatalks.checkers.model.ChessBoardModel;
+import ru.javatalks.checkers.model.Player;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FlowLayout;
 import java.util.ResourceBundle;
+import javax.annotation.PostConstruct;
 import javax.swing.*;
 
 /**
@@ -16,7 +20,8 @@ import javax.swing.*;
  * 
  * @author Kapellan
  */
-public class Menu {
+@Component
+public class Dialog {
 
     @Autowired
     private ResourceBundle bundle;
@@ -24,16 +29,15 @@ public class Menu {
     @Autowired
     private ChessBoardModel boardModel;
 
-    ChessBoard chessBoard = new ChessBoard();
-    Painter painter = new Painter(chessBoard, this);
-    ActionChessBoard act = new ActionChessBoard(chessBoard, painter);
-    String resultBuf;
-    String stepUserText;
-    String stepCompText;
-    String userHasFighterText;
-    String userMustFightText;
-    String wrongNextCellText;
-    JTextArea tArea = new JTextArea(26, 12);
+    @Autowired
+    private ChessBoard chessBoardPainter;
+
+    private Painter painter = new Painter(this);
+
+    private ActionChessBoard act = new ActionChessBoard(chessBoardPainter, painter);
+    
+    private String resultBuf;
+    private JTextArea tArea = new JTextArea(26, 12);
     private Language langFlag = Language.RUSSIAN;
 
     private JFrame frame = new JFrame();
@@ -56,11 +60,27 @@ public class Menu {
     private BoxLayout boxL = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
     private JPanel mainPanel = new JPanel(new FlowLayout());
 
-    private void setGui() {
+    @PostConstruct
+    public void runDialog() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception ignore) {
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                initializeComponent();
+            }
+        });
+    }
+
+    private void initializeComponent() {
         setLanguage(langFlag);
-        tArea.append(stepUserText + "\n");
-        
-        chessBoard.addMouseListener(act);
+        tArea.append(bundle.getString("stepUserText") + '\n');
+
+        chessBoardPainter.addMouseListener(act);
 
         menuSettings.add(itemLanguage);
 
@@ -95,7 +115,7 @@ public class Menu {
         resultPanel.add(scrollPane);
         resultPanel.add(Box.createVerticalStrut(20));
 
-        mainPanel.add(chessBoard);
+        mainPanel.add(chessBoardPainter);
         mainPanel.add(resultPanel);
 
         frame.setFocusable(true);
@@ -107,8 +127,8 @@ public class Menu {
         frame.setMinimumSize(new Dimension(700, 500));
         frame.pack();
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 
+        frame.setVisible(true);
     }
 
     public void setLanguage(Language lang) {
@@ -126,7 +146,7 @@ public class Menu {
             cbEngLang.setSelected(false);
             cbRusLang.setSelected(false);
         }
-        
+
         frame.setTitle(bundle.getString("frameTitle"));
         menuGame.setText(bundle.getString("gameTitle"));
         menuSettings.setText(bundle.getString("settingsTitle"));
@@ -143,31 +163,28 @@ public class Menu {
     void customResult() {
         labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
         labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
-        String optionsDialog[] = {bundle.getString("dialogNewGame"), bundle.getString("dialogExit")};
+        String[] optionsDialog = {bundle.getString("dialogNewGame"), bundle.getString("dialogExit")};
 
-        if (boardModel.getCompCheckerNumber() == 0) {
+        if (!boardModel.hasCheckerOf(Player.OPPONENT)) {
             notifyAboutGameEnd(optionsDialog, "userWon", "noCompCheckersText");
             return;
         }
-        if (boardModel.getUserCheckerNumber() == 0) {
-            painter.nextStepCompFlag = false;
+
+        if (!boardModel.hasCheckerOf(Player.USER)) {
             notifyAboutGameEnd(optionsDialog, "userLost", "noUserCheckersText");
             return;
         }
-        if (painter.getCompFighter().isEmpty()
-                && painter.getCompStepper().isEmpty()
-                && boardModel.getCompCheckerNumber() != 0) {
-            painter.nextStepCompFlag = false;
+
+        if (boardModel.canStep(Player.OPPONENT)) {
             notifyAboutGameEnd(optionsDialog, "userWon", "compIsBlockedText");
             return;
         }
 
-        if (painter.getUserFighter().isEmpty()
-                && painter.getUserStepper().isEmpty()
-                && boardModel.getUserCheckerNumber() != 0) {
+        if (boardModel.canStep(Player.USER)) {
             notifyAboutGameEnd(optionsDialog, "userLost", "userIsBlockedText");
             return;
         }
+
         tArea.append(resultBuf);
         resultBuf = "";
         tArea.setCaretPosition(tArea.getDocument().getLength());
@@ -188,27 +205,7 @@ public class Menu {
     }
 
     public void restartGame() {
-        main(langFlag.name());
+        runDialog();
         frame.dispose();
-    }
-
-    private Menu(String langFlag) {
-        this.langFlag = Language.getByCode(langFlag);
-    }
-
-
-    public static void main(String... args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception ignore) {
-        }
-        
-        if (args.length > 0) {
-            new Menu(args[0]).setGui();
-        }
-        else {
-            new Menu("russian").setGui();
-        }
     }
 }

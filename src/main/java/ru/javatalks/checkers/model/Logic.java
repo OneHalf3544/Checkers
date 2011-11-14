@@ -14,10 +14,7 @@ import java.util.Random;
 @Service
 public class Logic {
 
-    private ChessBoardModel chessBoardModel;
-
-    /* if true - the computer make next step, else - the player */
-    boolean nextStepCompFlag = false;
+    private final ChessBoardModel chessBoardModel;
 
     private final Random random = new Random();
 
@@ -33,53 +30,36 @@ public class Logic {
         }
 
         /*
-        * There is a fighter checker,
-        * but we selected other checker, which is not fighter
-        */
+         * There is a fighter checker,
+         * but we selected other checker, which is not fighter
+         */
         if (isFighter(activeCell)) {
-            Cell[] actCells = fight(activeCell, targetCell);
-            Cell victimCell = actCells[0];
-
-            if (isFighter(activeCell)) {
-                return;
-            }
-            if (!isFighter(activeCell)) {
-                nextStepCompFlag = true;
-                return;
-            }
+            fight(activeCell, targetCell);
+            return;
         }
 
         /* If there is no fighter checker we move */
         if (isMover(activeCell)) {
             move(activeCell, targetCell);
-            if (targetCell.getChecker().getOwner() == Player.USER) {
-                nextStepCompFlag = true;
-            }
         }
     }
     
 
     public void compStep() {
-        Cell actCells[];
-        Cell activeCell;
-        Cell victimCell;
-
-        activeCell = getCompFighter();
+        Cell activeCell = getCompFighter();
+        
         if (activeCell.isEmpty()) {
             do {
-                actCells = fight(activeCell);
-                victimCell = actCells[0];
+                Cell[] actCells = fight(activeCell);
                 activeCell = actCells[1];
             } while (activeCell.isEmpty());
 
-            nextStepCompFlag = false;
             return;
         }
-        activeCell = getCompStepper();
-        if (activeCell.isEmpty()) {
-            activeCell = move(activeCell);
-            nextStepCompFlag = false;
-            return;
+        
+        Cell compStepper = getCompStepper();
+        if (compStepper.isEmpty()) {
+            move(compStepper);
         }
     }
 
@@ -125,7 +105,6 @@ public class Logic {
 
     private boolean isSimpleCheckerFighter(Cell cell) {
         for (StepDirection direction : StepDirection.values()) {
-            Point position = cell.getPosition();
             Cell relativeCell = chessBoardModel.getRelativeCell(cell, direction);
 
             if (relativeCell.isEmpty() || relativeCell.getChecker() == cell.getChecker()) {
