@@ -2,6 +2,7 @@ package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.javatalks.checkers.actions.*;
+import ru.javatalks.checkers.model.ChessBoardModel;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -18,11 +19,14 @@ import javax.swing.*;
 public class Menu {
 
     @Autowired
-    ResourceBundle bundle;
+    private ResourceBundle bundle;
+
+    @Autowired
+    private ChessBoardModel boardModel;
 
     ChessBoard chessBoard = new ChessBoard();
-    Logic logic = new Logic(chessBoard, this);
-    ActionChessBoard act = new ActionChessBoard(chessBoard, logic);
+    Painter painter = new Painter(chessBoard, this);
+    ActionChessBoard act = new ActionChessBoard(chessBoard, painter);
     String resultBuf;
     String stepUserText;
     String stepCompText;
@@ -76,8 +80,8 @@ public class Menu {
         tArea.setWrapStyleWord(true);
         tArea.setEditable(false);
 
-        labelUser.setText(bundle.getString("labelUserTitle") + chessBoard.userCheckers);
-        labelComp.setText(bundle.getString("labelCompTitle") + chessBoard.compCheckers);
+        labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
+        labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         scrollPane.setAlignmentX(JScrollPane.LEFT_ALIGNMENT);
@@ -132,78 +136,55 @@ public class Menu {
         itemExit.setText(bundle.getString("exitTitle"));
         itemRules.setText(bundle.getString("rulesTitle"));
         itemAbout.setText(bundle.getString("aboutTitle"));
-        labelComp.setText(bundle.getString("labelCompTitle") + chessBoard.compCheckers);
-        labelUser.setText(bundle.getString("labelUserTitle") + chessBoard.userCheckers);
+        labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
+        labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
     }
 
     void customResult() {
-        labelUser.setText(bundle.getString("labelUserTitle") + chessBoard.userCheckers);
-        labelComp.setText(bundle.getString("labelCompTitle") + chessBoard.compCheckers);
+        labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
+        labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
         String optionsDialog[] = {bundle.getString("dialogNewGame"), bundle.getString("dialogExit")};
 
-        if (chessBoard.compCheckers == 0) {
-            int userChoice = JOptionPane.showOptionDialog(null,
-                    bundle.getString("noCompCheckersText"),
-                    bundle.getString("userWon"),
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
-            if (userChoice == JOptionPane.YES_OPTION) {
-                restartGame();
-            }
-            
-            if (userChoice == JOptionPane.NO_OPTION) {
-                System.exit(0);
-            }
+        if (boardModel.getCompCheckerNumber() == 0) {
+            notifyAboutGameEnd(optionsDialog, "userWon", "noCompCheckersText");
             return;
         }
-        if (chessBoard.userCheckers == 0) {
-            logic.nextStepCompFlag = false;
-            int userChoice = JOptionPane.showOptionDialog(null,
-                    bundle.getString("noUserCheckersText"),
-                    bundle.getString("userLost"),
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
-            if (userChoice == JOptionPane.YES_OPTION) {
-                restartGame();
-            }
-            
-            if (userChoice == JOptionPane.NO_OPTION) {
-                System.exit(0);
-            }
+        if (boardModel.getUserCheckerNumber() == 0) {
+            painter.nextStepCompFlag = false;
+            notifyAboutGameEnd(optionsDialog, "userLost", "noUserCheckersText");
             return;
         }
-        if (logic.getCompFighter().isEmpty()
-                && logic.getCompStepper().isEmpty()
-                && chessBoard.compCheckers != 0) {
-            logic.nextStepCompFlag = false;
-            int userChoice = JOptionPane.showOptionDialog(null,
-                    bundle.getString("compIsBlockedText"),
-                    bundle.getString("userWon"),
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
-            if (userChoice == JOptionPane.YES_OPTION) {
-                restartGame();
-            }
-            if (userChoice == JOptionPane.NO_OPTION) {
-                System.exit(0);
-            }
+        if (painter.getCompFighter().isEmpty()
+                && painter.getCompStepper().isEmpty()
+                && boardModel.getCompCheckerNumber() != 0) {
+            painter.nextStepCompFlag = false;
+            notifyAboutGameEnd(optionsDialog, "userWon", "compIsBlockedText");
             return;
         }
-        if (logic.getUserFighter().isEmpty()
-                && logic.getUserStepper().isEmpty()
-                && chessBoard.userCheckers != 0) {
-            int userChoice = JOptionPane.showOptionDialog(null,
-                    bundle.getString("userIsBlockedText"),
-                    bundle.getString("userLost"),
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
-            if (userChoice == JOptionPane.YES_OPTION) {
-                restartGame();
-            }
-            if (userChoice == JOptionPane.NO_OPTION) {
-                System.exit(0);
-            }
+
+        if (painter.getUserFighter().isEmpty()
+                && painter.getUserStepper().isEmpty()
+                && boardModel.getUserCheckerNumber() != 0) {
+            notifyAboutGameEnd(optionsDialog, "userLost", "userIsBlockedText");
             return;
         }
         tArea.append(resultBuf);
         resultBuf = "";
         tArea.setCaretPosition(tArea.getDocument().getLength());
+    }
+
+    private void notifyAboutGameEnd(String[] optionsDialog, String titleKey, String textKey) {
+        int userChoice = JOptionPane.showOptionDialog(null,
+                bundle.getString(textKey),
+                bundle.getString(titleKey),
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
+        if (userChoice == JOptionPane.YES_OPTION) {
+            restartGame();
+        }
+
+        if (userChoice == JOptionPane.NO_OPTION) {
+            System.exit(0);
+        }
     }
 
     public void restartGame() {

@@ -2,7 +2,6 @@ package ru.javatalks.checkers.model;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.javatalks.checkers.CellStatus;
 
 import java.awt.*;
 import java.util.Random;
@@ -53,7 +52,7 @@ public class Logic {
         /* If there is no fighter checker we move */
         if (isMover(activeCell)) {
             move(activeCell, targetCell);
-            if (targetCell.getChecker().getOwner() == User.USER_CHECKER) {
+            if (targetCell.getChecker().getOwner() == Player.USER) {
                 nextStepCompFlag = true;
             }
         }
@@ -412,7 +411,7 @@ public class Logic {
         return null;
     }
 
-    /** User move */
+    /** Player move */
     private void move(Cell activeCell, Cell targetCell) {
         if (activeCell.hasSimpleChecker()) {
             if (targetCell.equals(chessBoardModel.getRelativeCell(activeCell, StepDirection.UP_LEFT))) {
@@ -449,11 +448,11 @@ public class Logic {
             return false;
         }
 
-        if (cell.getChecker().getOwner() == User.USER_CHECKER && cell.getPosition().x == 8) {
+        if (cell.getChecker().getOwner() == Player.USER && cell.getPosition().x == 8) {
             return true;
         }
 
-        if (cell.getChecker().getOwner() == User.OPPONENT_CHECKER && cell.getPosition().x == 1) {
+        if (cell.getChecker().getOwner() == Player.OPPONENT && cell.getPosition().x == 1) {
             return true;
         }
         return false;

@@ -12,28 +12,28 @@ import java.awt.*;
  */
 public enum CellStatus {
 
-    NONE(false) {
+    NONE {
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             throw new IllegalStateException("can not draw cell of this type");
         }
     },
 
-    WHITE(true) { // 1
+    WHITE { // 1
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.WHITE);
             graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
         }
     },
-    GREY(false) { // 2
+    GREY { // 2
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
             graphics.fillRect(cell.getcX(), cell.getcY(), cellSize, cellSize);
         }
     },
-    USER_CHECKER(true) { // 3
+    USER_CHECKER { // 3
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -42,7 +42,7 @@ public enum CellStatus {
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
     },
-    COMP_CHECKER(false) { // 4
+    COMP_CHECKER { // 4
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -51,7 +51,7 @@ public enum CellStatus {
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
     },
-    ACTIVE(true) { // 5
+    ACTIVE { // 5
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -60,7 +60,7 @@ public enum CellStatus {
             graphics.fillOval(checkerX, checkerY, checkerDiameter, checkerDiameter);
         }
     },
-    WHITE_QUEEN(true) { // 6
+    WHITE_QUEEN { // 6
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -72,7 +72,7 @@ public enum CellStatus {
 
         }
     },
-    BLACK_QUEEN(false) { // 7
+    BLACK_QUEEN { // 7
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -83,7 +83,7 @@ public enum CellStatus {
             graphics.fillOval(checkerX + queenInnerOffset, checkerY + queenInnerOffset, queenInnerDiameter, queenInnerDiameter);
         }
     },
-    ACTIVE_QUEEN(true) { // 8
+    ACTIVE_QUEEN { // 8
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -94,7 +94,7 @@ public enum CellStatus {
             graphics.fillOval(checkerX + queenInnerOffset, checkerY + queenInnerOffset, queenInnerDiameter, queenInnerDiameter);
         }
     },
-    CHECKER_IN_FIGHT(false) { //9
+    CHECKER_IN_FIGHT { //9
         @Override
         public void paintCell(Graphics2D graphics, Cell cell) {
             graphics.setPaint(Color.GRAY);
@@ -104,12 +104,9 @@ public enum CellStatus {
         }
     };
 
-
-    private final boolean userCell;
-
-    CellStatus(boolean isUserCell) {
-        this.userCell = isUserCell;
-    }
+    /* Diameter of checkers, inner round of queen */
+    private final int checkerDiameter = 50;
+    private final int queenInnerDiameter = 40;
 
     public abstract void paintCell(Graphics2D graphics, Cell cell);
 }

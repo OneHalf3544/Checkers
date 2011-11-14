@@ -8,15 +8,15 @@ package ru.javatalks.checkers.model;
  */
 public class Checker {
 
-    private final User owner;
+    private final Player owner;
 
     private boolean isQueen = false;
 
-    public Checker(User owner) {
+    public Checker(Player owner) {
         this.owner = owner;
     }
 
-    public User getOwner() {
+    public Player getOwner() {
         return owner;
     }
 

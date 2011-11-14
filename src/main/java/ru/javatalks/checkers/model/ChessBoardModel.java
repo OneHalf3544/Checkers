@@ -11,6 +11,11 @@ import java.util.Iterator;
  */
 public class ChessBoardModel implements Iterable<Cell> {
 
+    public static final int CELL_SIDE_NUM = 8;
+
+    private int compCheckerNumber;
+    private int userCheckerNumber;
+
     private final Cell[][] contents;
 
     public ChessBoardModel() {
@@ -40,10 +45,41 @@ public class ChessBoardModel implements Iterable<Cell> {
         return getCellAt(direction.getNewCoordinates(cell.getPosition(), distant));
     }
 
+    public void move(Cell activeCell, Cell targetCell) {
+        // do move
+
+        fireBoardChange();
+
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    private void fireBoardChange() {
+        compCheckerNumber = calculateCheckersNumberFor(Player.OPPONENT);
+        userCheckerNumber = calculateCheckersNumberFor(Player.USER);
+    }
+
     @Override
     public Iterator<Cell> iterator() {
         return new CellIterator();
 }
+
+    public int calculateCheckersNumberFor(Player owner) {
+        int result = 0;
+        for (Cell cell : this) {
+            if (!cell.isEmpty() && cell.getChecker().getOwner() == owner) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    public int getCompCheckerNumber() {
+        return compCheckerNumber;
+    }
+
+    public int getUserCheckerNumber() {
+        return userCheckerNumber;
+    }
 
     private class CellIterator implements Iterator<Cell> {
         

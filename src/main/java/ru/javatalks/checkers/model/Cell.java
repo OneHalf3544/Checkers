@@ -13,11 +13,11 @@ public class Cell {
     }
 
     public boolean hasOpponentChecker() {
-        return checker.getOwner() == User.OPPONENT_CHECKER;
+        return checker.getOwner() == Player.OPPONENT;
     }
 
     public boolean hasUserChecker() {
-        return checker.getOwner() == User.USER_CHECKER;
+        return checker.getOwner() == Player.USER;
     }
 
     public boolean isEmpty() {

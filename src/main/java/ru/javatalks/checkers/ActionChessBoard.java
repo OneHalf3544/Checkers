@@ -11,23 +11,22 @@ import java.awt.event.*;
  */
 class ActionChessBoard extends MouseAdapter {
 
-    private ChessBoard cBoard;
-    private Logic logic;
-    private Thread thread;
-    
+    private final ChessBoard cBoard;
+    private final Painter painter;
+
     /* If true - we selected checker (checker is active - it is red) */
     private boolean selectingFlag = false;
 
-    ActionChessBoard(ChessBoard cBoard, Logic logic) {
+    ActionChessBoard(ChessBoard cBoard, Painter painter) {
         this.cBoard = cBoard;
-        this.logic = logic;
+        this.painter = painter;
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == 1 && !logic.nextStepCompFlag) {
+        if (e.getButton() == 1) {
             /* Select checker - paint it red - make it active */
-            Cell clickedCell = logic.getCellByCoordinates(e.getX(), e.getY());
+            Cell clickedCell = getCellByCoordinates(e.getX(), e.getY());
             if (!selectingFlag) {
                 setActiveCell(clickedCell);
                 return;
@@ -49,21 +48,19 @@ class ActionChessBoard extends MouseAdapter {
             }
 
             /* We activated checker, so second click selects target cell */
-            if (selectingFlag == true) {
+            if (selectingFlag) {
                 Cell activeCell = getActiveCell();
-                Cell targetCell = clickedCell;
-                logic.userStep(activeCell, targetCell);
-                if (logic.nextStepCompFlag == true) {
-                    thread = new Thread(logic);
+                painter.userStep(activeCell, clickedCell);
+                if (painter.nextStepCompFlag == true) {
+                    Thread thread = new Thread(painter);
                     thread.start();
-                    logic.shuffleCells();
                 }
                 return;
             }
         }
 
         /* Right-button mouse click - deactivates any active checker */
-        if (e.getButton() == 3 && !logic.inActionFlag) {
+        if (e.getButton() == 3 && !painter.inActionFlag) {
             resetActiveCell();
             return;
         }
@@ -83,9 +80,8 @@ class ActionChessBoard extends MouseAdapter {
     }
 
     void resetActiveCell() {
-        Cell cell;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
-            cell = cBoard.cells[cCounter];
+            Cell cell = cBoard.cells[cCounter];
             if (cell.getStatus() == CellStatus.ACTIVE) {
                 cell.setChecker(CellStatus.USER_CHECKER);
                 selectingFlag = false;
@@ -100,13 +96,25 @@ class ActionChessBoard extends MouseAdapter {
     }
 
     private Cell getActiveCell() {
-        Cell cell;
         for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
-            cell = cBoard.cells[cCounter];
+            Cell cell = cBoard.cells[cCounter];
             if (cell.getStatus() == CellStatus.ACTIVE || cell.getStatus() == CellStatus.ACTIVE_QUEEN) {
                 return cell;
             }
         }
         return new Cell(CellStatus.NONE);
+    }
+
+    Cell getCellByCoordinates(int clickedX, int clickedY) {
+        for (int cCounter = 0; cCounter < cBoard.cellNum; cCounter++) {
+            Cell tmpCell = cBoard.cells[cCounter];
+            if (clickedX >= tmpCell.cX
+                    & clickedX < tmpCell.cX + ChessBoard.CELL_SIZE
+                    & clickedY >= tmpCell.cY
+                    & clickedY < tmpCell.cY + ChessBoard.CELL_SIZE) {
+                return tmpCell;
+            }
+        }
+        return null;
     }
 }

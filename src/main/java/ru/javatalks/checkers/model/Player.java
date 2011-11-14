@@ -6,6 +6,6 @@ package ru.javatalks.checkers.model;
 *
 * @author OneHalf
 */
-public enum User {
-    USER_CHECKER, OPPONENT_CHECKER
+public enum Player {
+    USER, OPPONENT
 }
