@@ -5,23 +5,24 @@ import java.awt.*;
 public class Cell {
 
     private Checker checker;
-    private final Point position;
+    private final int x;
+    private final int y;
 
-    Cell(int x, int y, Checker checker) {
-        this.position = new Point(x, y);
-        this.checker = checker;
+    Cell(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
     public boolean hasOpponentChecker() {
-        return checker.getOwner() == Player.OPPONENT;
+        return checker != null && checker.getOwner() == Player.OPPONENT;
     }
 
     public boolean hasUserChecker() {
-        return checker.getOwner() == Player.USER;
+        return checker != null && checker.getOwner() == Player.USER;
     }
 
     public boolean isEmpty() {
-        return checker.getOwner() == null;
+        return checker == null;
     }
 
     public boolean hasQueen() {
@@ -40,7 +41,19 @@ public class Cell {
         this.checker = checker;
     }
 
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
     public Point getPosition() {
-        return position;
+        return new Point(x, y);
+    }
+
+    public String getIndex() {
+        return String.valueOf('a' + x) + y;
     }
 }

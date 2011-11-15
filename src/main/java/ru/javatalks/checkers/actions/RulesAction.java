@@ -1,6 +1,7 @@
 package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -12,6 +13,7 @@ import java.util.ResourceBundle;
  *
  * @author OneHalf
  */
+@Component
 public class RulesAction extends AbstractAction {
 
     @Autowired

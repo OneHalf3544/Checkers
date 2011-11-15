@@ -1,6 +1,7 @@
 package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.Language;
 import ru.javatalks.checkers.Dialog;
 
@@ -17,11 +18,11 @@ public class ChangeLangAction extends AbstractAction {
 
     private final Language language;
 
-    @Autowired
     private Dialog dialog;
 
-    public ChangeLangAction(Language language) {
+    public ChangeLangAction(Dialog dialog, Language language) {
         this.language = language;
+        this.dialog = dialog;
     }
 
     public void actionPerformed(ActionEvent e) {

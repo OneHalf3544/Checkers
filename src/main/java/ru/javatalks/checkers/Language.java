@@ -11,9 +11,9 @@ import java.util.NoSuchElementException;
  */
 public enum Language {
 
-    RUSSIAN("russian.properties"),
-    UKRAINIAN("ukrainian.properties"),
-    ENGLISH("english.properties");
+    RUSSIAN("resources/russian.properties"),
+    UKRAINIAN("resources/ukrainian.properties"),
+    ENGLISH("resources/english.properties");
     
     private final File file;
 

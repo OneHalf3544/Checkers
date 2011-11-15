@@ -2,8 +2,12 @@ package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.model.Cell;
+import ru.javatalks.checkers.model.ChessBoardListener;
 import ru.javatalks.checkers.model.ChessBoardModel;
+import ru.javatalks.checkers.model.Player;
 
+import javax.annotation.PostConstruct;
 import javax.swing.*;
 import java.awt.*;
 
@@ -20,41 +24,65 @@ public class ChessBoard extends JPanel {
     @Autowired
     private ChessBoardModel chessBoardModel;
 
-    private final CellStatus[][] cells = new CellStatus[CELL_SIDE_NUM][CELL_SIDE_NUM];
+    @Autowired
+    private Dialog dialog;
 
     /* The offset from left and top frame bounds  */
-    private static final int OFFSET_LEFT_BOUND = -30;
+    static final int OFFSET_LEFT_BOUND = 30;
 
-    private static final int OFFSET_TOP_BOUND = -30;
+    static final int OFFSET_TOP_BOUND = 30;
 
     private final Dimension preferredSize
-            = new Dimension(CELL_SIDE_NUM * CellStatus.CELL_SIZE + CellStatus.CELL_SIZE, CELL_SIDE_NUM * CellStatus.CELL_SIZE + CellStatus.CELL_SIZE);
+            = new Dimension(CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE, CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE);
     
     /* Those arrays we use in  makeIndex() method and in painting numbers of chess board in method paint()*/
     private final String[] literals = {"a", "b", "c", "d", "e", "f", "g", "h"};
     private final String[] numbers = {"8", "7", "6", "5", "4", "3", "2", "1"};
 
-    public ChessBoard() {
-        /* The cycle of vertical rows painting */
-        for (int v = 0; v < CELL_SIDE_NUM; v++) {
-            for (int h = 0; h < CELL_SIDE_NUM; h++) {
-                /* unpaired cols in paired rows are grey */
-                if ((v + h) % 2 == 0) {
-                    cells[h][v] = CellStatus.WHITE;
-                    continue;
-                }
+    private Cell activeCell = null;
 
-                // grey cells in the center of board
-                if (v > 2 && v < 5) {
-                    cells[h][v] = CellStatus.GREY;
-                } else {
-                    /* black cells we arrange by checkers. Cells upper 5 row - white checkers (enemy), under 4 row - black checkers (own) **/
-                    cells[h][v] = v < CELL_SIDE_NUM / 2 ? CellStatus.COMP_CHECKER : CellStatus.USER_CHECKER;
-                }
-            }
-        }
+    public ChessBoard() {
         this.setMinimumSize(preferredSize);
         this.setPreferredSize(preferredSize);
+    }
+
+    @PostConstruct
+    public void initBoard() {
+        chessBoardModel.addListener(new ChessBoardListener() {
+            @Override
+            public void boardChanged() {
+                repaint();
+                dialog.checkGameStatus();
+            }
+
+            @Override
+            public void moved(Cell from, Cell to, Cell victimCell, Player player) {}
+        });
+
+        repaint();
+    }
+
+    private CellType getTypeForCell(int x, int y) {
+        /* unpaired cols in paired rows are grey */
+        if ((x + y) % 2 != 0) {
+            return CellType.WHITE_CELL;
+        }
+
+        Cell cell = chessBoardModel.getCellAt(x, y);
+        if (cell.isEmpty()) {
+            return CellType.GREY_CELL;
+        }
+
+        if (cell.hasOpponentChecker()) {
+            return cell.hasQueen() ? CellType.OPPONENT_QUEEN : CellType.OPPONENT_CHECKER;
+        }
+
+        if (cell == activeCell) {
+            return cell.hasQueen() ? CellType.ACTIVE_QUEEN: CellType.ACTIVE;
+        }
+        else {
+            return cell.hasQueen() ? CellType.USER_QUEEN : CellType.USER_CHECKER;
+        }
     }
 
     @Override
@@ -72,11 +100,11 @@ public class ChessBoard extends JPanel {
 
         for (int x = 0; x < CELL_SIDE_NUM; x++) {
             for (int y = 0; y < CELL_SIDE_NUM; y++) {
-                cells[x][y].paintCell((Graphics2D) graphics.create(
-                        OFFSET_LEFT_BOUND + x * CellStatus.CELL_SIZE,
-                        OFFSET_TOP_BOUND + y * CellStatus.CELL_SIZE,
-                        CellStatus.CELL_SIZE,
-                        CellStatus.CELL_SIZE));
+                getTypeForCell(x, CELL_SIDE_NUM - y - 1).paintCell((Graphics2D) graphics.create(
+                        OFFSET_LEFT_BOUND + x * CellType.CELL_SIZE,
+                        OFFSET_TOP_BOUND + y * CellType.CELL_SIZE,
+                        CellType.CELL_SIZE,
+                        CellType.CELL_SIZE));
             }
         }
         this.setPreferredSize(preferredSize);
@@ -86,10 +114,27 @@ public class ChessBoard extends JPanel {
     private void drawIndexesMark(Graphics2D graphics) {
         /* This cycle make the numbers and literals near chess board bounds */
         for (int i = 0; i < CELL_SIDE_NUM; i++) {
-            /* horizontal number */
-            graphics.drawString(numbers[i], OFFSET_LEFT_BOUND + 40, OFFSET_TOP_BOUND + i * CellStatus.CELL_SIZE + 30);
-            /* vertical literal */
-            graphics.drawString(literals[i], OFFSET_LEFT_BOUND + i * CellStatus.CELL_SIZE + 20, OFFSET_TOP_BOUND + 50);
+            /* vertical number */
+            graphics.drawString(numbers[i],
+                    OFFSET_LEFT_BOUND - CellType.CELL_SIZE / 2 ,
+                    OFFSET_TOP_BOUND + i * CellType.CELL_SIZE + CellType.CELL_SIZE / 2);
+
+            /* horizontal literal */
+            graphics.drawString(literals[i],
+                    OFFSET_LEFT_BOUND + CellType.CELL_SIZE / 2 + i * CellType.CELL_SIZE,
+                    OFFSET_TOP_BOUND + CellType.CELL_SIZE * CELL_SIDE_NUM + CellType.CELL_SIZE / 2);
         }
+    }
+
+    public void setActiveCell(Cell activeCell) {
+        this.activeCell = activeCell;
+    }
+
+    public boolean hasActiveChecker() {
+        return activeCell != null;
+    }
+
+    public Cell getActiveCell() {
+        return activeCell;
     }
 }

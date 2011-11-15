@@ -2,7 +2,6 @@ package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import ru.javatalks.checkers.actions.*;
 import ru.javatalks.checkers.model.ChessBoardModel;
 import ru.javatalks.checkers.model.Player;
@@ -14,6 +13,8 @@ import java.awt.FlowLayout;
 import java.util.ResourceBundle;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
+
+import static java.lang.System.exit;
 
 /**
  * This class provides GUI
@@ -32,33 +33,49 @@ public class Dialog {
     @Autowired
     private ChessBoard chessBoardPainter;
 
-    private Painter painter = new Painter(this);
+    @Autowired
+    private CheckBoardMouseListener act;
 
-    private ActionChessBoard act = new ActionChessBoard(chessBoardPainter, painter);
-    
-    private String resultBuf;
-    private JTextArea tArea = new JTextArea(26, 12);
+    @Autowired
+    private NewGameAction newGameAction;
+
+    @Autowired
+    private ExitAction exitAction;
+
+    @Autowired
+    private RulesAction rulesAction;
+
+    @Autowired
+    private AboutAction aboutAction;
+
+    private final JTextArea tArea = new JTextArea(26, 12);
     private Language langFlag = Language.RUSSIAN;
 
-    private JFrame frame = new JFrame();
-    private JMenuBar menuBar = new JMenuBar();
-    private JMenu menuGame = new JMenu();
-    private JMenu menuSettings = new JMenu();
-    private JMenu itemLanguage = new JMenu();
-    private JCheckBoxMenuItem cbRusLang = new JCheckBoxMenuItem(new ChangeLangAction(Language.RUSSIAN));
-    private JCheckBoxMenuItem cbEngLang = new JCheckBoxMenuItem(new ChangeLangAction(Language.ENGLISH));
-    private JCheckBoxMenuItem cbUkrLang = new JCheckBoxMenuItem(new ChangeLangAction(Language.UKRAINIAN));
-    private JMenu menuHelp = new JMenu();
-    private JMenuItem itemNewGame = new JMenuItem(new NewGameAction());
-    private JMenuItem itemExit = new JMenuItem(new ExitAction());
-    private JMenuItem itemRules = new JMenuItem(new RulesAction());
-    private JMenuItem itemAbout = new JMenuItem(new AboutAction());
+    private final JFrame frame = new JFrame();
+    private final JMenuBar menuBar = new JMenuBar();
+
+    private final JMenu menuGame = new JMenu();
+    private final JMenu menuSettings = new JMenu();
+    private final JMenu itemLanguage = new JMenu();
+
+    private final JCheckBoxMenuItem cbRusLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.RUSSIAN));
+    private final JCheckBoxMenuItem cbEngLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.ENGLISH));
+    private final JCheckBoxMenuItem cbUkrLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.UKRAINIAN));
+
+    private final JMenu menuHelp = new JMenu();
+
+    private JMenuItem itemNewGame;
+    private JMenuItem itemExit;
+    private JMenuItem itemRules;
+    private JMenuItem itemAbout;
+
     private JLabel labelComp = new JLabel();
     private JLabel labelUser = new JLabel();
     private JScrollPane scrollPane = new JScrollPane(tArea);
     private JPanel resultPanel = new JPanel();
     private BoxLayout boxL = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
     private JPanel mainPanel = new JPanel(new FlowLayout());
+
 
     @PostConstruct
     public void runDialog() {
@@ -77,7 +94,7 @@ public class Dialog {
     }
 
     private void initializeComponent() {
-        setLanguage(langFlag);
+
         tArea.append(bundle.getString("stepUserText") + '\n');
 
         chessBoardPainter.addMouseListener(act);
@@ -87,6 +104,11 @@ public class Dialog {
         itemLanguage.add(cbRusLang);
         itemLanguage.add(cbEngLang);
         itemLanguage.add(cbUkrLang);
+
+        itemNewGame = new JMenuItem(newGameAction);
+        itemExit = new JMenuItem(exitAction);
+        itemRules = new JMenuItem(rulesAction);
+        itemAbout = new JMenuItem(aboutAction);
 
         menuHelp.add(itemRules);
         menuHelp.add(itemAbout);
@@ -102,11 +124,11 @@ public class Dialog {
 
         labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
         labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
-        scrollPane.setAlignmentX(JScrollPane.LEFT_ALIGNMENT);
-        labelUser.setAlignmentX(JLabel.LEFT_ALIGNMENT);
-        labelComp.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        scrollPane.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        labelUser.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        labelComp.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
 
         resultPanel.setLayout(boxL);
         resultPanel.add(labelUser);
@@ -117,6 +139,8 @@ public class Dialog {
 
         mainPanel.add(chessBoardPainter);
         mainPanel.add(resultPanel);
+
+        setLanguage(langFlag);
 
         frame.setFocusable(true);
         frame.getRootPane().setOpaque(true);
@@ -152,6 +176,7 @@ public class Dialog {
         menuSettings.setText(bundle.getString("settingsTitle"));
         itemLanguage.setText(bundle.getString("languageTitle"));
         menuHelp.setText(bundle.getString("helpTitle"));
+
         itemNewGame.setText(bundle.getString("newGameTitle"));
         itemExit.setText(bundle.getString("exitTitle"));
         itemRules.setText(bundle.getString("rulesTitle"));
@@ -160,9 +185,10 @@ public class Dialog {
         labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
     }
 
-    void customResult() {
+    void checkGameStatus() {
         labelUser.setText(bundle.getString("labelUserTitle") + boardModel.getUserCheckerNumber());
         labelComp.setText(bundle.getString("labelCompTitle") + boardModel.getCompCheckerNumber());
+
         String[] optionsDialog = {bundle.getString("dialogNewGame"), bundle.getString("dialogExit")};
 
         if (!boardModel.hasCheckerOf(Player.OPPONENT)) {
@@ -175,19 +201,15 @@ public class Dialog {
             return;
         }
 
-        if (boardModel.canStep(Player.OPPONENT)) {
+        if (!boardModel.canStep(Player.OPPONENT)) {
             notifyAboutGameEnd(optionsDialog, "userWon", "compIsBlockedText");
             return;
         }
 
-        if (boardModel.canStep(Player.USER)) {
+        if (!boardModel.canStep(Player.USER)) {
             notifyAboutGameEnd(optionsDialog, "userLost", "userIsBlockedText");
             return;
         }
-
-        tArea.append(resultBuf);
-        resultBuf = "";
-        tArea.setCaretPosition(tArea.getDocument().getLength());
     }
 
     private void notifyAboutGameEnd(String[] optionsDialog, String titleKey, String textKey) {
@@ -195,12 +217,12 @@ public class Dialog {
                 bundle.getString(textKey),
                 bundle.getString(titleKey),
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, optionsDialog, optionsDialog[0]);
+        
         if (userChoice == JOptionPane.YES_OPTION) {
             restartGame();
         }
-
-        if (userChoice == JOptionPane.NO_OPTION) {
-            System.exit(0);
+        else {
+            exit(0);
         }
     }
 
