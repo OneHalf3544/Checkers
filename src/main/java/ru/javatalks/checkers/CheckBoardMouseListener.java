@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.model.Cell;
 import ru.javatalks.checkers.model.ChessBoardModel;
+import ru.javatalks.checkers.model.Logic;
 
 import java.awt.event.*;
 
@@ -17,6 +18,9 @@ class CheckBoardMouseListener extends MouseAdapter {
 
     @Autowired
     private ChessBoardModel chessBoardModel;
+
+    @Autowired
+    private Logic logic;
 
     @Autowired
     private StepLogger painter;
@@ -54,7 +58,7 @@ class CheckBoardMouseListener extends MouseAdapter {
 
             // We activated checker, so second click selects target cell
             Cell activeCell = getActiveCell();
-            chessBoardModel.doStep(activeCell, clickedCell);
+            logic.doStep(activeCell, clickedCell);
             return;
         }
 

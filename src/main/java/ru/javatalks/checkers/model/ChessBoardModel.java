@@ -2,11 +2,10 @@ package ru.javatalks.checkers.model;
 
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Date: 13.11.11
@@ -39,27 +38,33 @@ public class ChessBoardModel implements Iterable<Cell> {
         setInitialState();
     }
 
-    public void setInitialState() {
-        for(int x = 0; x < CELL_SIDE_NUM; x++) {
-            for(int y = 0; y <= 2; y++) {
+    public final void setInitialState() {
+        for (int x = 0; x < CELL_SIDE_NUM; x++) {
+            for (int y = 0; y <= 2; y++) {
                 if ((x + y) % 2 == 0) {
                     contents[x][y].setChecker(new Checker(Player.USER));
                 }
             }
 
-            for(int y = 5; y <= 7; y++) {
+            for (int y = 5; y <= 7; y++) {
                 if ((x + y) % 2 == 0) {
                     contents[x][y].setChecker(new Checker(Player.OPPONENT));
                 }
             }
         }
+
+        compCheckerNumber = 12;
+        userCheckerNumber = 12;
     }
 
     public Cell getCellAt(Point point) {
-        return contents[point.x][point.y];
+        return getCellAt(point.x, point.y);
     }
 
     public Cell getCellAt(int x, int y) {
+        if (x < 0 || y < 0 || x >= CELL_SIDE_NUM || y >= CELL_SIDE_NUM) {
+            return null;
+        }
         return contents[x][y];
     }
 
@@ -71,15 +76,19 @@ public class ChessBoardModel implements Iterable<Cell> {
         return getCellAt(direction.getNewCoordinates(cell.getPosition(), distant));
     }
 
-    public void move(Cell from, Cell to) {
+    public StepDescription move(Cell from, StepDirection direction) {
         assert !from.isEmpty();
-        assert to.isEmpty();
+        assert direction != null;
 
+        Cell to = getRelativeCell(from, direction);
         to.setChecker(from.getChecker());
         from.setChecker(null);
 
+        // todo checkNewQueens();
         fireMoved(from, to, Player.USER);
         fireBoardChange();
+
+        return new StepDescription(from, to);
     }
 
     private void fireMoved(Cell activeCell, Cell targetCell, Player user) {
@@ -100,7 +109,7 @@ public class ChessBoardModel implements Iterable<Cell> {
     @Override
     public Iterator<Cell> iterator() {
         return new CellIterator();
-}
+    }
 
     public int calculateCheckersNumberFor(Player owner) {
         int result = 0;
@@ -133,13 +142,6 @@ public class ChessBoardModel implements Iterable<Cell> {
         return true;
     }
 
-    public void doStep(Cell from, Cell to) {
-        assert from != null;
-        assert to == null;
-
-        move(from, to);
-    }
-
     public void addListener(ChessBoardListener listener) {
         listeners.add(listener);
     }
@@ -148,22 +150,52 @@ public class ChessBoardModel implements Iterable<Cell> {
         listeners.remove(listener);
     }
 
+    public StepDescription fight(Cell activeCell, StepDirection direction) {
+        throw new UnsupportedOperationException();
+    }
+
+    public StepDescription fight(Cell activeCell, Cell targetCell) {
+        throw new UnsupportedOperationException();
+    }
+
+    private void checkNewQueens(Cell cell) {
+        if (!cell.hasSimpleChecker()) {
+            return;
+        }
+
+        if (cell.getChecker().getOwner() == Player.USER && cell.getY() == 7
+                || cell.getChecker().getOwner() == Player.OPPONENT && cell.getY() == 0) {
+            cell.getChecker().makeQueen();
+        }
+    }
+
+    public StepDescription move(Cell activeCell, Cell targetCell) {
+        return new StepDescription(activeCell, targetCell);
+    }
+
     private class CellIterator implements Iterator<Cell> {
-        
-        private int index = 0;
+
+        private int indexX = -2;
+        private int indexY = 0;
 
         @Override
         public boolean hasNext() {
-            return index < CELL_SIDE_NUM * CELL_SIDE_NUM - 2;
+            return indexX < 7 || indexY < 7;
         }
 
         @Override
         public Cell next() {
-            index += 2;
-            return contents[index / CELL_SIDE_NUM][index % CELL_SIDE_NUM];
+            indexX += 2;
+
+            if (indexX >= CELL_SIDE_NUM) {
+                indexX = 1 - indexX % CELL_SIDE_NUM;
+                indexY++;
+            }
+            return contents[indexX][indexY];
         }
 
         @Override
-        public void remove() {}
+        public void remove() {
+        }
     }
 }

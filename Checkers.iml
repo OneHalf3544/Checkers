@@ -29,6 +29,7 @@
     <orderEntry type="library" name="Maven: org.aopalliance:com.springsource.org.aopalliance:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:org.springframework.expression:3.0.5.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.1.1" level="project" />
+    <orderEntry type="library" name="Maven: com.google.collections:google-collections:1.0" level="project" />
   </component>
 </module>
 

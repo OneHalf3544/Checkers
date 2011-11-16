@@ -1,9 +1,10 @@
 package ru.javatalks.checkers.model;
 
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
+import java.util.List;
 import java.util.Random;
 
 /** 
@@ -18,84 +19,77 @@ public class Logic {
 
     private final Random random = new Random();
 
+    private static final StepDirection[] directionsForUser = {StepDirection.UP_LEFT, StepDirection.UP_RIGHT};
+    private static final StepDirection[] directionsForOpponent = {StepDirection.DOWN_LEFT, StepDirection.DOWN_RIGHT};
+
     @Autowired
     Logic(ChessBoardModel chessBoardModel) {
         this.chessBoardModel = chessBoardModel;
     }
     
-    public void userStep(Cell activeCell, Cell targetCell) {
-        
-        if (!(getUserFighter().isEmpty() || isFighter(activeCell))) {
+    public void doStep(Cell from, Cell to) {
+        assert !from.isEmpty();
+        assert to.isEmpty();
+
+        Player player = from.getChecker().getOwner();
+
+        if (!getFighters(player).isEmpty() && !canFight(from)) {
             throw new IllegalStateException("user has fighter checker and must do step by it");
         }
 
-        /*
-         * There is a fighter checker,
-         * but we selected other checker, which is not fighter
-         */
-        if (isFighter(activeCell)) {
-            fight(activeCell, targetCell);
+        if (canFight(from)) {
+            fight(from, to);
             return;
         }
 
         /* If there is no fighter checker we move */
-        if (isMover(activeCell)) {
-            move(activeCell, targetCell);
+        if (canMove(from)) {
+            move(from, to);
         }
+
+        throw new IllegalStateException("can't do this step");
     }
     
 
     public void compStep() {
-        Cell activeCell = getCompFighter();
-        
-        if (activeCell.isEmpty()) {
-            do {
-                Cell[] actCells = fight(activeCell);
-                activeCell = actCells[1];
-            } while (activeCell.isEmpty());
+        List<Cell> fighters = getFighters(Player.OPPONENT);
 
+        if (!fighters.isEmpty()) {
+            fight(fighters.get(random.nextInt(fighters.size())));
             return;
         }
-        
+
         Cell compStepper = getCompStepper();
         if (compStepper.isEmpty()) {
-            move(compStepper);
+            opponentMove(compStepper);
         }
     }
 
     /**
-     * We check is checker a fighter
+     * Check, that checker can fight
      * @param cell
-     * @return true, if specified cell can fight
+     * @return true, if the specified cell can fight
      */
-    private boolean isFighter(Cell cell) {
+    private boolean canFight(Cell cell) {
         if (cell.isEmpty()) {
             return false;
         }
-
-        if (cell.hasSimpleChecker()) {
-            return isSimpleCheckerFighter(cell);
-        }
-
-        if (cell.hasQueen()) {
-            return isQueenFighter(cell);
-        }
-        return false;
+        return cell.hasSimpleChecker() ? isSimpleCheckerFighter(cell) : isQueenFighter(cell);
     }
 
     private boolean isQueenFighter(Cell cell) {
         assert cell.hasQueen();
 
         for (StepDirection direction : StepDirection.values()) {
-
+            // Search a checker of other player
             Cell tmpCell;
             do {
                 tmpCell = chessBoardModel.getRelativeCell(cell, direction);
             } while (cell.isEmpty());
 
+            // if the next cell behind opponent checker is free - queen can fight
             if (tmpCell.getChecker().getOwner() != cell.getChecker().getOwner()) {
-                Cell nextCell = chessBoardModel.getRelativeCell(tmpCell, direction);
-                if (nextCell.isEmpty()) {
+                if (getRelativeCell(tmpCell, direction).isEmpty()) {
                     return true;
                 }
             }
@@ -105,14 +99,15 @@ public class Logic {
 
     private boolean isSimpleCheckerFighter(Cell cell) {
         for (StepDirection direction : StepDirection.values()) {
-            Cell relativeCell = chessBoardModel.getRelativeCell(cell, direction);
-
-            if (relativeCell.isEmpty() || relativeCell.getChecker() == cell.getChecker()) {
+            Cell relativeCell = getRelativeCell(cell, direction);
+            if (relativeCell == null) {
                 continue;
             }
 
-            if (chessBoardModel.getRelativeCell(relativeCell, direction).isEmpty()) {
-                return true;
+            if (!relativeCell.isEmpty() && relativeCell.getChecker().getOwner() != cell.getChecker().getOwner()) {
+                if (chessBoardModel.getRelativeCell(relativeCell, direction).isEmpty()) {
+                    return true;
+                }
             }
         }
         return false;
@@ -122,87 +117,44 @@ public class Logic {
      * find comp fighting checker
      * @return
      */
-    Cell getCompFighter() {
-        for (Cell fighterCell : chessBoardModel) {
-            if (fighterCell.hasOpponentChecker() && isFighter(fighterCell)) {
-                return fighterCell;
+    private List<Cell> getFighters(Player player) {
+        List<Cell> result = Lists.newArrayList();
+
+        for (Cell cell : chessBoardModel) {
+            if (!cell.isEmpty() && cell.getChecker().getOwner() == player && canFight(cell)) {
+                result.add(cell);
             }
         }
-        return null;
+        return result;
     }
 
-    /**
-     * find user fighting checker
-     * @return
-     */
-    Cell getUserFighter() {
-        for (Cell fighterCell : chessBoardModel) {
-            if (fighterCell.hasUserChecker() && isFighter(fighterCell)) {
-                return fighterCell;
-            }
-        }
-        return null;
-    }
+    private boolean canMove(Cell cell) {
+        assert !cell.isEmpty();
 
-    Cell getUserStepper() {
-        for (Cell mCell : chessBoardModel) {
-            if (mCell.hasUserChecker() && isMover(mCell)) {
-                return mCell;
-            }
-        }
-        return null;
-    }
-
-    private boolean isMover(Cell cell) {
-        Cell firstNext;
-        /* for black checkers */
-        if (cell.hasOpponentChecker() && cell.hasSimpleChecker()) {
-            firstNext = chessBoardModel.getRelativeCell(cell, StepDirection.DOWN_LEFT);
-            if (firstNext.isEmpty()) {
-                return true;
-            }
-
-            firstNext = chessBoardModel.getRelativeCell(cell, StepDirection.DOWN_RIGHT);
-            if (firstNext.isEmpty()) {
-                return true;
-            }
-        }
-
-        if (cell.hasOpponentChecker() && cell.hasQueen()) {
+        if (cell.hasQueen()) {
             for (StepDirection direction : StepDirection.values()) {
-                firstNext = chessBoardModel.getRelativeCell(cell, direction);
-                if (firstNext.isEmpty()) {
+                if (getRelativeCell(cell, direction).isEmpty()) {
                     return true;
                 }
             }
         }
-        /* for white (user checkers) */
-        if (cell.hasUserChecker() && cell.hasSimpleChecker()) {
-            firstNext = chessBoardModel.getRelativeCell(cell, StepDirection.UP_LEFT);
+
+        Player player = cell.getChecker().getOwner();
+        StepDirection[] directions = player == Player.OPPONENT ? directionsForOpponent : directionsForUser;
+
+        for (StepDirection direction : directions) {
+            Cell firstNext = chessBoardModel.getRelativeCell(cell, direction);
             if (firstNext.isEmpty()) {
                 return true;
             }
-            firstNext = chessBoardModel.getRelativeCell(cell, StepDirection.UP_RIGHT);
-            if (firstNext.isEmpty()) {
-                return true;
-            }
-
         }
-        if (cell.hasUserChecker() && cell.getChecker().isQueen()) {
 
-            for (StepDirection direction: StepDirection.values()) {
-                firstNext = chessBoardModel.getRelativeCell(cell, direction);
-                if (firstNext.isEmpty()) {
-                    return true;
-                }
-            }
-        }
         return false;
-    } //end isMover()
+    }
 
     Cell getCompStepper() {
         for (Cell stepperCell : chessBoardModel) {
-            if (stepperCell.hasOpponentChecker() && isMover(stepperCell)) {
+            if (stepperCell.hasOpponentChecker() && canMove(stepperCell)) {
                 return stepperCell;
             }
         }
@@ -214,7 +166,7 @@ public class Logic {
      * @param fighterCell cell with checker, which will move and fight
      * @return values of victim and target cell
      */
-    private Cell[] fight(Cell fighterCell) {
+    private StepDescription fight(Cell fighterCell) {
         assert fighterCell.hasOpponentChecker();
 
         if (fighterCell.hasSimpleChecker()) {
@@ -224,10 +176,7 @@ public class Logic {
                     Cell targetCell = chessBoardModel.getRelativeCell(victimCell, direction);
 
                     if (targetCell.isEmpty()) {
-                        targetCell.setChecker(fighterCell.getChecker());
-                        victimCell.setChecker(null);
-                        fighterCell.setChecker(null);
-                        return new Cell[]{victimCell, targetCell};
+                        return fight(fighterCell, targetCell);
                     }
                 }
             }
@@ -249,12 +198,7 @@ public class Logic {
 
                 Cell cellAfterVictim = chessBoardModel.getRelativeCell(victimCell, direction);
                 if (cellAfterVictim.isEmpty()) {
-
-                    victimCell.setChecker(null);
-                    cellAfterVictim.setChecker(fighterCell.getChecker());
-                    fighterCell.setChecker(null);
-
-                    return new Cell[]{victimCell, cellAfterVictim};
+                    return chessBoardModel.fight(fighterCell, cellAfterVictim);
                 }
             }
         }
@@ -267,22 +211,13 @@ public class Logic {
      * @param targetCell
      * @return victims of fight
      */
-    private Cell[] fight(Cell activeCell, Cell targetCell) {
+    private StepDescription fight(Cell activeCell, Cell targetCell) {
         assert targetCell.isEmpty();
 
         for (StepDirection direction : StepDirection.values()){
-            /*
-             * Verify that second upper left cell from our active checker is free
-             */
-            if (targetCell.equals(getRelativeCell(activeCell, direction, 2))) {
-                Cell victimCell = getRelativeCell(activeCell, direction);
-                if (victimCell.hasOpponentChecker()) {
-                    targetCell.setChecker(activeCell.getChecker());
-                    activeCell.setChecker(null);
-                    victimCell.setChecker(null);
-
-                    return new Cell[] {victimCell, targetCell};
-                }
+            if (targetCell == getRelativeCell(activeCell, direction, 2)
+                    && getRelativeCell(activeCell, direction).hasOpponentChecker()) {
+                return chessBoardModel.fight(activeCell, direction);
             }
         }
         if (activeCell.hasSimpleChecker()) {
@@ -300,19 +235,13 @@ public class Logic {
                 } while (victimCell.isEmpty());
 
                 if (victimCell.hasOpponentChecker()) {
-                    count++;
-
-                    Cell tmpCell = getRelativeCell(activeCell, direction, count);
-                    while (tmpCell.isEmpty()) {
-                        if (targetCell.equals(tmpCell)) {
-                            targetCell.setChecker(activeCell.getChecker());
-                            victimCell.setChecker(null);
-                            activeCell.setChecker(null);
-
-                            return new Cell[]{victimCell, targetCell};
-                        }
+                    Cell tmpCell;
+                    do {
                         count++;
-                    }
+                        tmpCell = getRelativeCell(activeCell, direction, count);
+                    } while (targetCell == tmpCell);
+
+                    return chessBoardModel.fight(activeCell, targetCell);
                 }
             }
         }
@@ -324,117 +253,89 @@ public class Logic {
      * @param mCell
      * @return
      */
-    private Cell move(Cell mCell) {
+    private StepDescription opponentMove(Cell mCell) {
         assert mCell.hasOpponentChecker();
 
         if (mCell.hasSimpleChecker()) {
-            int randomSignX = getRandomSign();
-            int clickedXrand = mCell.getPosition().x + randomSignX;
-            int clickedY = mCell.getPosition().y + 1;
-            int clickedXrev = mCell.getPosition().x - randomSignX;
+            int rand = random.nextInt(2);
+            StepDirection direction = directionsForOpponent[rand];
+            StepDirection direction2 = directionsForOpponent[1 - rand];
 
-            Cell targetCell = chessBoardModel.getCellAt(clickedXrand, clickedY);
+            Cell targetCell = getRelativeCell(mCell, direction);
             if (targetCell.isEmpty()) {
-                targetCell.setChecker(mCell.getChecker());
-                mCell.setChecker(null);
-                
-                return targetCell;
+                return chessBoardModel.move(mCell, targetCell);
             }
-            Cell targetCell2 = chessBoardModel.getCellAt(clickedXrev, clickedY);
+
+            Cell targetCell2 = chessBoardModel.getRelativeCell(mCell, direction2);
             if (targetCell2.isEmpty()) {
-                targetCell2.setChecker(mCell.getChecker());
-                mCell.setChecker(null);
-                return targetCell2;
+                return chessBoardModel.move(mCell, targetCell2);
             }
+
+            throw new IllegalStateException();
         }
-        if (mCell.hasQueen()) {
-            Cell tmpCell;
-            Cell targetCell;
-            Cell queenPossibleStep[] = new Cell[8];
-            
-            /* Queen can take any cell after fight, save possible cells to array */
-            queenPossibleStep[0] = null;
-            
-            /** Check top left diagonal from selected cell. When cells with status "2" ended, we check next cell - if it is enemy(status "3 (6)" ) 
-             * we check next cell in diagonal, if it is grey cell(status "2") return true - queen should fight
-             * top left
-             */
-            int count = 0;
-            while ((tmpCell = chessBoardModel.getRelativeCell(mCell, StepDirection.UP_LEFT)).isEmpty()) {
+
+        Cell[] queenPossibleStep = new Cell[8];
+
+        /* Queen can take any cell after fight, save possible cells to array */
+        queenPossibleStep[0] = null;
+
+        /**
+         * Check diagonals from selected cell. When cells with status "2" ended, we check next cell - if it is enemy(status "3 (6)" )
+         * we check next cell in diagonal, if it is grey cell(status "2") return true - queen should fight
+         * top left
+         */
+        int count = 0;
+        Cell tmpCell;
+        while ((tmpCell = chessBoardModel.getRelativeCell(mCell, StepDirection.UP_LEFT)).isEmpty()) {
+            queenPossibleStep[count] = tmpCell;
+            count++;
+        }
+        Cell targetCell;
+        if (queenPossibleStep[0].isEmpty()) {
+            targetCell = queenPossibleStep[random.nextInt(count - 1)];
+            return chessBoardModel.move(mCell, targetCell);
+        }
+
+        for (StepDirection direction : StepDirection.values()) {
+            count = 0;
+            do {
                 queenPossibleStep[count] = tmpCell;
                 count++;
-            }
+                tmpCell = getRelativeCell(mCell, direction, count);
+            } while (tmpCell.isEmpty());
+
             if (queenPossibleStep[0].isEmpty()) {
-                targetCell = queenPossibleStep[random.nextInt(count - 1)];
-                targetCell.setChecker(mCell.getChecker());
-                mCell.setChecker(null);
-                return targetCell;
-            }
-
-            for (StepDirection direction : StepDirection.values()) {
-                count = 0;
-                do {
-                    queenPossibleStep[count] = tmpCell;
-                    count++;
-                    tmpCell = getRelativeCell(mCell, direction, count);
-                } while (tmpCell.isEmpty());
-
-                if (queenPossibleStep[0].isEmpty()) {
-                    targetCell = queenPossibleStep[random.nextInt(count)];
-                    targetCell.setChecker(mCell.getChecker());
-                    mCell.setChecker(null);
-                    return targetCell;
-                }
+                targetCell = queenPossibleStep[random.nextInt(count)];
+                return chessBoardModel.move(mCell, targetCell);
             }
         }
-        return null;
+        throw new IllegalStateException("can not step by checker on this cell");
     }
 
-    /** Player move */
-    private void move(Cell activeCell, Cell targetCell) {
+    /**
+     * Player move
+     */
+    private StepDescription move(Cell activeCell, Cell targetCell) {
         if (activeCell.hasSimpleChecker()) {
-            if (targetCell.equals(chessBoardModel.getRelativeCell(activeCell, StepDirection.UP_LEFT))) {
-                if (targetCell.isEmpty()) {
-                    targetCell.setChecker(activeCell.getChecker());
-                    activeCell.setChecker(null);
-                    return;
+            for (StepDirection direction : directionsForUser) {
+                if (targetCell == chessBoardModel.getRelativeCell(activeCell, direction)) {
+                    return chessBoardModel.move(activeCell, direction);
                 }
             }
-            if (targetCell.equals(chessBoardModel.getRelativeCell(activeCell, StepDirection.UP_RIGHT))) {
-                if (targetCell.isEmpty()) {
-                    targetCell.setChecker(activeCell.getChecker());
-                    activeCell.setChecker(null);
-                    return;
-                }
-            }
+            throw new IllegalStateException("wrong step for simple checker");
         }
-        if (activeCell.hasUserChecker() && activeCell.hasQueen()) {
-            for (StepDirection direction : StepDirection.values()) {
-                Cell tmpCell = activeCell;
-                while ((tmpCell = chessBoardModel.getRelativeCell(tmpCell, direction)).isEmpty()) {
-                    if (tmpCell.equals(targetCell)) {
-                        activeCell.setChecker(null);
-                        tmpCell.setChecker(activeCell.getChecker());
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    
-    private boolean checkQueen(Cell cell) {
-        if (!cell.hasSimpleChecker()) {
-            return false;
-        }
+        
+        for (StepDirection direction : StepDirection.values()) {
+            Cell tmpCell = activeCell;
+            do {
+                tmpCell = chessBoardModel.getRelativeCell(tmpCell, direction);
+            } while (tmpCell.isEmpty());
 
-        if (cell.getChecker().getOwner() == Player.USER && cell.getPosition().x == 8) {
-            return true;
+            if (tmpCell == targetCell) {
+                return chessBoardModel.move(activeCell, targetCell);
+            }
         }
-
-        if (cell.getChecker().getOwner() == Player.OPPONENT && cell.getPosition().x == 1) {
-            return true;
-        }
-        return false;
+        throw new IllegalStateException("wrong step for queen");
     }
 
     public int getRandomSign() {
