@@ -10,5 +10,5 @@ public interface ChessBoardListener {
     
     public void boardChanged();
 
-    public void moved(Cell from, Cell to, Cell victimCell, Player player);
+    public void moved(StepDescription step);
 }

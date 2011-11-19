@@ -8,24 +8,27 @@ package ru.javatalks.checkers.model;
  */
 public class StepDescription {
 
-    private final Cell form;
+    private final Cell from;
     private final Cell to;
     private final Cell victim;
+    private final Checker checker;
 
-    public StepDescription(Cell form, Cell to, Cell victim) {
-        this.form = form;
+    public StepDescription(Checker checker, Cell form, Cell to, Cell victim) {
+        this.checker = checker;
+        this.from = form;
         this.to = to;
         this.victim = victim;
     }
 
-    public StepDescription(Cell from, Cell to) {
-        this.form = from;
+    public StepDescription(Checker checker, Cell from, Cell to) {
+        this.checker = checker;
+        this.from = from;
         this.to = to;
         this.victim = null;
     }
 
-    public Cell getForm() {
-        return form;
+    public Cell getFrom() {
+        return from;
     }
 
     public Cell getTo() {
@@ -34,5 +37,20 @@ public class StepDescription {
 
     public Cell getVictim() {
         return victim;
+    }
+
+    public Player getPlayer() {
+        return checker.getOwner();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("step ").append(from.getIndex()).append(" : ");
+
+        if (victim != null) {
+            result.append(victim.getIndex()).append(" : ");
+        }
+
+        return result.append(to.getIndex()).toString();
     }
 }

@@ -2,6 +2,8 @@ package ru.javatalks.checkers.model;
 
 import java.awt.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Date: 13.11.11
  * Time: 2:52
@@ -29,5 +31,16 @@ public enum StepDirection {
 
     public Point getNewCoordinates(Point currentPosition, int distant) {
         return new Point(currentPosition.x + distant * dx, currentPosition.y + distant * dy);
+    }
+
+    public static StepDirection getByDxDy(int dx, int dy) {
+        checkArgument(Math.abs(dx) == Math.abs(dy), "don't' has this direction");
+
+        if (dy > 0) {
+            return dx < 0 ? UP_LEFT : UP_RIGHT;
+        }
+        else {
+            return dx < 0 ? DOWN_LEFT : DOWN_RIGHT;
+        }
     }
 }

@@ -21,6 +21,7 @@ public class ChangeLangAction extends AbstractAction {
     private Dialog dialog;
 
     public ChangeLangAction(Dialog dialog, Language language) {
+        super(language.getNameForMenu());
         this.language = language;
         this.dialog = dialog;
     }

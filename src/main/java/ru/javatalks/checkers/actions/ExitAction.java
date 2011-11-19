@@ -2,6 +2,7 @@ package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.L10nBundleBundle;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -18,7 +19,7 @@ import java.util.ResourceBundle;
 public class ExitAction extends AbstractAction {
 
     @Autowired
-    ResourceBundle bundle;
+    L10nBundleBundle bundle;
 
     @PostConstruct
     public void initialise() {

@@ -2,6 +2,7 @@ package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.L10nBundleBundle;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -17,7 +18,7 @@ import java.util.ResourceBundle;
 public class AboutAction extends AbstractAction {
 
     @Autowired
-    private ResourceBundle bundle;
+    private L10nBundleBundle bundle;
 
     public void actionPerformed(ActionEvent e) {
         JOptionPane.showMessageDialog(null,

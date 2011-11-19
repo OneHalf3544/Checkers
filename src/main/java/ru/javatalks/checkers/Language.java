@@ -11,13 +11,15 @@ import java.util.NoSuchElementException;
  */
 public enum Language {
 
-    RUSSIAN("resources/russian.properties"),
-    UKRAINIAN("resources/ukrainian.properties"),
-    ENGLISH("resources/english.properties");
+    RUSSIAN("resources/russian.properties", "Русский"),
+    UKRAINIAN("resources/ukrainian.properties", "Украинский"),
+    ENGLISH("resources/english.properties", "English");
     
     private final File file;
+    private final String nameForMenu;
 
-    Language(String fileName) {
+    Language(String fileName, String nameForMenu) {
+        this.nameForMenu = nameForMenu;
         this.file = new File(fileName);
     }
 
@@ -32,5 +34,9 @@ public enum Language {
 
     public File getPropFile() {
         return file;
+    }
+
+    public String getNameForMenu() {
+        return nameForMenu;
     }
 }

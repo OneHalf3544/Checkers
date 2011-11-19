@@ -23,9 +23,6 @@ class CheckBoardMouseListener extends MouseAdapter {
     private Logic logic;
 
     @Autowired
-    private StepLogger painter;
-
-    @Autowired
     private ChessBoard chessBoard;
 
     @Override
@@ -59,6 +56,8 @@ class CheckBoardMouseListener extends MouseAdapter {
             // We activated checker, so second click selects target cell
             Cell activeCell = getActiveCell();
             logic.doStep(activeCell, clickedCell);
+
+            logic.doCompStep();
             return;
         }
 

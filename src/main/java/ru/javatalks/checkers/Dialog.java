@@ -25,7 +25,7 @@ import static java.lang.System.exit;
 public class Dialog {
 
     @Autowired
-    private ResourceBundle bundle;
+    private L10nBundleBundle bundle;
 
     @Autowired
     private ChessBoardModel boardModel;
@@ -48,33 +48,37 @@ public class Dialog {
     @Autowired
     private AboutAction aboutAction;
 
-    private final JTextArea tArea = new JTextArea(26, 12);
+    @Autowired
+    private ChessBoardModel chessBoardModel;
+
+    @Autowired
+    private StepLogger stepLogger;
+
     private Language langFlag = Language.RUSSIAN;
 
-    private final JFrame frame = new JFrame();
-    private final JMenuBar menuBar = new JMenuBar();
+    private JTextArea tArea;
 
-    private final JMenu menuGame = new JMenu();
-    private final JMenu menuSettings = new JMenu();
-    private final JMenu itemLanguage = new JMenu();
+    private JFrame frame;
+    private JMenuBar menuBar;
 
-    private final JCheckBoxMenuItem cbRusLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.RUSSIAN));
-    private final JCheckBoxMenuItem cbEngLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.ENGLISH));
-    private final JCheckBoxMenuItem cbUkrLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.UKRAINIAN));
+    private JMenu menuGame;
+    private JMenu menuSettings;
+    private JMenu itemLanguage;
 
-    private final JMenu menuHelp = new JMenu();
+    private JCheckBoxMenuItem cbRusLang;
+    private JCheckBoxMenuItem cbEngLang;
+    private JCheckBoxMenuItem cbUkrLang;
+
+    private JMenu menuHelp;
 
     private JMenuItem itemNewGame;
     private JMenuItem itemExit;
     private JMenuItem itemRules;
     private JMenuItem itemAbout;
 
-    private JLabel labelComp = new JLabel();
-    private JLabel labelUser = new JLabel();
-    private JScrollPane scrollPane = new JScrollPane(tArea);
-    private JPanel resultPanel = new JPanel();
-    private BoxLayout boxL = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
-    private JPanel mainPanel = new JPanel(new FlowLayout());
+    private JLabel labelComp;
+    private JLabel labelUser;
+    private JPanel resultPanel;
 
 
     @PostConstruct
@@ -94,6 +98,27 @@ public class Dialog {
     }
 
     private void initializeComponent() {
+        tArea = new JTextArea(26, 12);
+        langFlag = Language.RUSSIAN;
+
+        frame = new JFrame();
+        menuBar = new JMenuBar();
+
+        menuGame = new JMenu();
+        menuSettings = new JMenu();
+        itemLanguage = new JMenu();
+
+        cbRusLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.RUSSIAN));
+        cbEngLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.ENGLISH));
+        cbUkrLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.UKRAINIAN));
+
+        menuHelp = new JMenu();
+
+        labelComp = new JLabel();
+        labelUser = new JLabel();
+        JScrollPane scrollPane = new JScrollPane(tArea);
+        resultPanel = new JPanel();
+        JPanel mainPanel = new JPanel(new FlowLayout());
 
         tArea.append(bundle.getString("stepUserText") + '\n');
 
@@ -107,13 +132,17 @@ public class Dialog {
 
         itemNewGame = new JMenuItem(newGameAction);
         itemExit = new JMenuItem(exitAction);
+
+        menuGame.add(itemNewGame);
+        menuGame.add(itemExit);
+
         itemRules = new JMenuItem(rulesAction);
         itemAbout = new JMenuItem(aboutAction);
 
         menuHelp.add(itemRules);
         menuHelp.add(itemAbout);
-        menuBar.add(menuGame);
 
+        menuBar.add(menuGame);
         menuBar.add(menuSettings);
         menuBar.add(menuHelp);
 
@@ -130,7 +159,8 @@ public class Dialog {
         labelUser.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         labelComp.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
 
-        resultPanel.setLayout(boxL);
+        BoxLayout boxLayout = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
+        resultPanel.setLayout(boxLayout);
         resultPanel.add(labelUser);
         resultPanel.add(labelComp);
         resultPanel.add(Box.createVerticalStrut(10));
@@ -156,6 +186,8 @@ public class Dialog {
     }
 
     public void setLanguage(Language lang) {
+        bundle.setLanguage(lang);
+
         langFlag = lang;
 
         if (langFlag == Language.RUSSIAN) {
@@ -227,7 +259,11 @@ public class Dialog {
     }
 
     public void restartGame() {
-        runDialog();
-        frame.dispose();
+        chessBoardModel.setInitialState();
+        stepLogger.clear();
+    }
+
+    public void setText(String text) {
+        tArea.setText(text);
     }
 }

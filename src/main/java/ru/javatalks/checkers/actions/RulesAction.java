@@ -2,6 +2,7 @@ package ru.javatalks.checkers.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.L10nBundleBundle;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -17,7 +18,7 @@ import java.util.ResourceBundle;
 public class RulesAction extends AbstractAction {
 
     @Autowired
-    ResourceBundle bundle;
+    L10nBundleBundle bundle;
 
     @Override
     public void actionPerformed(ActionEvent e) {

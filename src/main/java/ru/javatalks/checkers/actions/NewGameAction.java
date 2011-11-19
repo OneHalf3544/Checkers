@@ -3,6 +3,7 @@ package ru.javatalks.checkers.actions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.Dialog;
+import ru.javatalks.checkers.L10nBundleBundle;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -22,7 +23,7 @@ public class NewGameAction extends AbstractAction {
     private Dialog dialog;
 
     @Autowired
-    ResourceBundle bundle;
+    L10nBundleBundle bundle;
 
     @PostConstruct
     public void initialise() {

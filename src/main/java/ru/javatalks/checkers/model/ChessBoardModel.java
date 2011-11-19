@@ -27,18 +27,21 @@ public class ChessBoardModel implements Iterable<Cell> {
 
     public ChessBoardModel() {
         contents = new Cell[8][8];
-        for (int i = 0; i < contents.length; i++) {
-            Cell[] tempArray = new Cell[8];
-            for (int j = 0; j < tempArray.length; j++) {
-                tempArray[j] = new Cell(i, j);
-            }
-            contents[i] = tempArray;
-        }
 
         setInitialState();
     }
 
     public final void setInitialState() {
+        for (int i = 0; i < contents.length; i++) {
+            Cell[] tempArray = new Cell[8];
+            for (int j = 0; j < tempArray.length; j++) {
+                if ((i + j) % 2 == 0) {
+                    tempArray[j] = new Cell(i, j);
+                }
+            }
+            contents[i] = tempArray;
+        }
+
         for (int x = 0; x < CELL_SIDE_NUM; x++) {
             for (int y = 0; y <= 2; y++) {
                 if ((x + y) % 2 == 0) {
@@ -55,6 +58,8 @@ public class ChessBoardModel implements Iterable<Cell> {
 
         compCheckerNumber = 12;
         userCheckerNumber = 12;
+
+        fireBoardChange();
     }
 
     public Cell getCellAt(Point point) {
@@ -76,24 +81,37 @@ public class ChessBoardModel implements Iterable<Cell> {
         return getCellAt(direction.getNewCoordinates(cell.getPosition(), distant));
     }
 
+    public StepDescription move(Cell activeCell, Cell targetCell) {
+        assert !activeCell.isEmpty();
+        assert targetCell.isEmpty();
+
+        StepDirection direction = getDirection(activeCell, targetCell);
+
+        Cell to = getRelativeCell(activeCell, direction);
+        Checker movedChecker = activeCell.getChecker();
+
+        to.setChecker(movedChecker);
+        activeCell.setChecker(null);
+
+        checkNewQueens();
+        StepDescription stepDescription = new StepDescription(movedChecker, activeCell, to);
+
+        fireMoved(stepDescription);
+        fireBoardChange();
+
+        return stepDescription;
+    }
+
     public StepDescription move(Cell from, StepDirection direction) {
         assert !from.isEmpty();
         assert direction != null;
 
-        Cell to = getRelativeCell(from, direction);
-        to.setChecker(from.getChecker());
-        from.setChecker(null);
-
-        // todo checkNewQueens();
-        fireMoved(from, to, Player.USER);
-        fireBoardChange();
-
-        return new StepDescription(from, to);
+        return move(from, getRelativeCell(from, direction));
     }
 
-    private void fireMoved(Cell activeCell, Cell targetCell, Player user) {
+    private void fireMoved(StepDescription stepDescription) {
         for (ChessBoardListener listener : listeners) {
-            listener.moved(activeCell, targetCell, null, user);
+            listener.moved(stepDescription);
         }
     }
 
@@ -151,26 +169,61 @@ public class ChessBoardModel implements Iterable<Cell> {
     }
 
     public StepDescription fight(Cell activeCell, StepDirection direction) {
-        throw new UnsupportedOperationException();
+        return fight(activeCell, getRelativeCell(activeCell, direction, 2));
     }
 
     public StepDescription fight(Cell activeCell, Cell targetCell) {
-        throw new UnsupportedOperationException();
+        assert activeCell.hasQueen();
+
+        StepDirection direction = getDirection(activeCell, targetCell);
+
+        Checker checker = activeCell.getChecker();
+        Cell victim = searchNextNonEmpty(activeCell, direction);
+
+        activeCell.setChecker(null);
+        victim.setChecker(null);
+        targetCell.setChecker(checker);
+
+        StepDescription stepDescription = new StepDescription(checker, activeCell, targetCell, victim);
+        
+        fireMoved(stepDescription);
+        fireBoardChange();
+
+        return stepDescription;
     }
 
-    private void checkNewQueens(Cell cell) {
-        if (!cell.hasSimpleChecker()) {
-            return;
-        }
+    private void checkNewQueens() {
+        int y = 0;
+        for (int x = 0; x < CELL_SIDE_NUM; x += 2) {
+            Cell cell = contents[x][y];
+            if (cell.hasCheckerOf(Player.OPPONENT) && cell.hasSimpleChecker()) {
+                cell.getChecker().makeQueen();
+            }
 
-        if (cell.getChecker().getOwner() == Player.USER && cell.getY() == 7
-                || cell.getChecker().getOwner() == Player.OPPONENT && cell.getY() == 0) {
-            cell.getChecker().makeQueen();
+        }
+        y = 7;
+        for (int x = 1; x < CELL_SIDE_NUM; x += 2) {
+            Cell cell = contents[x][y];
+            if (cell.hasCheckerOf(Player.USER) && cell.hasSimpleChecker()) {
+                cell.getChecker().makeQueen();
+            }
+
         }
     }
 
-    public StepDescription move(Cell activeCell, Cell targetCell) {
-        return new StepDescription(activeCell, targetCell);
+    Cell searchNextNonEmpty(Cell activeCell, StepDirection direction) {
+        Cell tmpCell = activeCell;
+        do {
+            tmpCell = getRelativeCell(tmpCell, direction);
+        } while (tmpCell != null && tmpCell.isEmpty());
+
+        return tmpCell;
+    }
+
+    StepDirection getDirection(Cell from, Cell to) {
+        int dx = to.getX() - from.getX();
+        int dy = to.getY() - from.getY();
+        return StepDirection.getByDxDy(dx, dy);
     }
 
     private class CellIterator implements Iterator<Cell> {

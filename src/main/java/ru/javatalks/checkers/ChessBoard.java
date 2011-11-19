@@ -2,10 +2,7 @@ package ru.javatalks.checkers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.javatalks.checkers.model.Cell;
-import ru.javatalks.checkers.model.ChessBoardListener;
-import ru.javatalks.checkers.model.ChessBoardModel;
-import ru.javatalks.checkers.model.Player;
+import ru.javatalks.checkers.model.*;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -48,17 +45,7 @@ public class ChessBoard extends JPanel {
 
     @PostConstruct
     public void initBoard() {
-        chessBoardModel.addListener(new ChessBoardListener() {
-            @Override
-            public void boardChanged() {
-                repaint();
-                dialog.checkGameStatus();
-            }
-
-            @Override
-            public void moved(Cell from, Cell to, Cell victimCell, Player player) {}
-        });
-
+        chessBoardModel.addListener(new ChessBoardChangeListener());
         repaint();
     }
 
@@ -122,7 +109,7 @@ public class ChessBoard extends JPanel {
             /* horizontal literal */
             graphics.drawString(literals[i],
                     OFFSET_LEFT_BOUND + CellType.CELL_SIZE / 2 + i * CellType.CELL_SIZE,
-                    OFFSET_TOP_BOUND + CellType.CELL_SIZE * CELL_SIDE_NUM + CellType.CELL_SIZE / 2);
+                    OFFSET_TOP_BOUND - 10);
         }
     }
 
@@ -136,5 +123,16 @@ public class ChessBoard extends JPanel {
 
     public Cell getActiveCell() {
         return activeCell;
+    }
+
+    private class ChessBoardChangeListener implements ChessBoardListener {
+        @Override
+        public void boardChanged() {
+            repaint();
+            dialog.checkGameStatus();
+        }
+
+        @Override
+        public void moved(StepDescription step) {}
     }
 }

@@ -14,11 +14,15 @@ public class Cell {
     }
 
     public boolean hasOpponentChecker() {
-        return checker != null && checker.getOwner() == Player.OPPONENT;
+        return hasCheckerOf(Player.OPPONENT);
     }
 
     public boolean hasUserChecker() {
-        return checker != null && checker.getOwner() == Player.USER;
+        return hasCheckerOf(Player.USER);
+    }
+
+    public boolean hasCheckerOf(Player player) {
+        return checker != null && checker.getOwner() == player;
     }
 
     public boolean isEmpty() {
@@ -30,7 +34,7 @@ public class Cell {
     }
 
     public boolean hasSimpleChecker() {
-        return !(checker == null || checker.isQueen());
+        return checker != null && !checker.isQueen();
     }
 
     public Checker getChecker() {
@@ -54,6 +58,7 @@ public class Cell {
     }
 
     public String getIndex() {
-        return String.valueOf('a' + x) + y;
+        char xChar = (char) (x + 'a');
+        return String.valueOf(xChar) + (y + 1);
     }
 }
