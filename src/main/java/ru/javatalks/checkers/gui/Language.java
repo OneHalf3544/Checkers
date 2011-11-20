@@ -1,4 +1,4 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
 import java.io.File;
 import java.util.NoSuchElementException;

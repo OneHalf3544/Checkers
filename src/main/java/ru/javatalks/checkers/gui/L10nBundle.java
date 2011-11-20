@@ -1,4 +1,4 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
@@ -16,13 +16,13 @@ import java.util.ResourceBundle;
  *
  * @author OneHalf
  */
-public class L10nBundleBundle {
+public class L10nBundle {
 
     private final Map<Language, ResourceBundle> bundleMap = Maps.newHashMap();
     
     private ResourceBundle currentBundle;
 
-    public L10nBundleBundle(Language language) throws IOException {
+    public L10nBundle(Language language) throws IOException {
         bundleMap.put(Language.ENGLISH, getBundle(Language.ENGLISH));
         bundleMap.put(Language.RUSSIAN, getBundle(Language.RUSSIAN));
         bundleMap.put(Language.UKRAINIAN, getBundle(Language.UKRAINIAN));

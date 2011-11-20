@@ -1,5 +1,6 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.model.Cell;
@@ -16,6 +17,8 @@ import java.awt.event.*;
 @Component
 class CheckBoardMouseListener extends MouseAdapter {
 
+    private static final Logger logger = Logger.getLogger(CheckBoardMouseListener.class);
+
     @Autowired
     private ChessBoardModel chessBoardModel;
 
@@ -25,16 +28,20 @@ class CheckBoardMouseListener extends MouseAdapter {
     @Autowired
     private ChessBoard chessBoard;
 
+    @Autowired
+    private StepLogger stepLogger;
+
     @Override
-    public void mousePressed(MouseEvent e) {
-        Cell clickedCell = getCellByCoordinates(e.getX(), e.getY());
+    public void mousePressed(MouseEvent evt) {
+        Cell clickedCell = getCellByCoordinates(evt.getX(), evt.getY());
 
         if (clickedCell == null || clickedCell.hasOpponentChecker()) {
             return;
         }
 
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            if (!hasActiveChecker()) {
+        if (evt.getButton() == MouseEvent.BUTTON1) {
+            // set active cell (if cell is not active yet)
+            if (!hasActiveChecker() || clickedCell.hasUserChecker()) {
                 setActiveCell(clickedCell);
                 return;
             }
@@ -45,24 +52,19 @@ class CheckBoardMouseListener extends MouseAdapter {
                 return;
             }
 
-            // If was click on non active checker, but we have active checker,
-            // active becomes non active, and deactivated becomes active
-            if (clickedCell.hasUserChecker()) {
-                resetActiveCell();
-                setActiveCell(clickedCell);
-                return;
-            }
-
             // We activated checker, so second click selects target cell
-            Cell activeCell = getActiveCell();
-            logic.doStep(activeCell, clickedCell);
-
-            logic.doCompStep();
-            return;
+            try {
+                Cell activeCell = getActiveCell();
+                logic.doStep(activeCell, clickedCell);
+                logic.doCompStep();
+            } catch (CheckerStepException e) {
+                stepLogger.logErrorCause(e);
+                logger.info(e.getCauseOfError());
+            }
         }
 
         // Right-button mouse click - deactivates any active checker
-        if (e.getButton() == MouseEvent.BUTTON3) {
+        if (evt.getButton() == MouseEvent.BUTTON3) {
             resetActiveCell();
         }
     }

@@ -1,5 +1,6 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.model.*;
@@ -17,6 +18,8 @@ import static ru.javatalks.checkers.model.ChessBoardModel.CELL_SIDE_NUM;
  */
 @Component
 public class ChessBoard extends JPanel {
+    
+    private static final Logger logger = Logger.getLogger(ChessBoard.class);
 
     @Autowired
     private ChessBoardModel chessBoardModel;
@@ -30,8 +33,8 @@ public class ChessBoard extends JPanel {
     static final int OFFSET_TOP_BOUND = 30;
 
     private final Dimension preferredSize
-            = new Dimension(CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE, CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE);
-    
+    = new Dimension(CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE, CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE);
+
     /* Those arrays we use in  makeIndex() method and in painting numbers of chess board in method paint()*/
     private final String[] literals = {"a", "b", "c", "d", "e", "f", "g", "h"};
     private final String[] numbers = {"8", "7", "6", "5", "4", "3", "2", "1"};
@@ -74,6 +77,8 @@ public class ChessBoard extends JPanel {
 
     @Override
     public void paintComponent(Graphics g) {
+        logger.trace("paint component");
+
         super.paintComponent(g);
         Graphics2D graphics = (Graphics2D) g;
         
@@ -83,7 +88,6 @@ public class ChessBoard extends JPanel {
         graphics.setFont(font);
         
         drawIndexesMark(graphics);
-
 
         for (int x = 0; x < CELL_SIDE_NUM; x++) {
             for (int y = 0; y < CELL_SIDE_NUM; y++) {
@@ -95,7 +99,6 @@ public class ChessBoard extends JPanel {
             }
         }
         this.setPreferredSize(preferredSize);
-        repaint();
     }
 
     private void drawIndexesMark(Graphics2D graphics) {
@@ -115,6 +118,7 @@ public class ChessBoard extends JPanel {
 
     public void setActiveCell(Cell activeCell) {
         this.activeCell = activeCell;
+        repaint();
     }
 
     public boolean hasActiveChecker() {

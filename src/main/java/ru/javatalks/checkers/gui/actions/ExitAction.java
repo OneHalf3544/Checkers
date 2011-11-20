@@ -1,37 +1,32 @@
-package ru.javatalks.checkers.actions;
+package ru.javatalks.checkers.gui.actions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.javatalks.checkers.Dialog;
-import ru.javatalks.checkers.L10nBundleBundle;
+import ru.javatalks.checkers.gui.L10nBundle;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.ResourceBundle;
 
 /**
  * Date: 12.11.11
- * Time: 21:14
+ * Time: 21:13
  *
  * @author OneHalf
  */
 @Component
-public class NewGameAction extends AbstractAction {
+public class ExitAction extends AbstractAction {
 
     @Autowired
-    private Dialog dialog;
-
-    @Autowired
-    L10nBundleBundle bundle;
+    private L10nBundle bundle;
 
     @PostConstruct
     public void initialise() {
-        putValue(NAME, bundle.getString("newGameTitle"));
+        putValue(NAME, bundle.getString("exitTitle"));
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        dialog.restartGame();
+        System.exit(0);
     }
 }

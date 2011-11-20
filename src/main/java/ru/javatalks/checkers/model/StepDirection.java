@@ -25,10 +25,6 @@ public enum StepDirection {
         this.dy = dy;
     }
 
-    public Point getNewCoordinates(Point currentPosition) {
-        return getNewCoordinates(currentPosition, 1);
-    }
-
     public Point getNewCoordinates(Point currentPosition, int distant) {
         return new Point(currentPosition.x + distant * dx, currentPosition.y + distant * dy);
     }

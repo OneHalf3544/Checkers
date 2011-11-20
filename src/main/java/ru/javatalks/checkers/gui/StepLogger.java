@@ -1,7 +1,8 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.javatalks.checkers.gui.CheckerStepException.Cause;
 import ru.javatalks.checkers.model.*;
 
 import javax.annotation.PostConstruct;
@@ -13,7 +14,7 @@ public class StepLogger implements ChessBoardListener {
     private Dialog dialog;
 
     @Autowired
-    private L10nBundleBundle bundle;
+    private L10nBundle bundle;
 
     @Autowired
     private ChessBoardModel chessBoardModel;
@@ -59,5 +60,19 @@ public class StepLogger implements ChessBoardListener {
 
     public void clear() {
         stringBuilder.setLength(0);
+    }
+
+    public void logErrorCause(CheckerStepException exception) {
+        Cause cause = exception.getCauseOfError();
+        switch (cause) {
+            case WRONG_STEP:
+                stringBuilder.append(bundle.getString("wrongNextCellText"));
+                break;
+            case MUST_FIGHT:
+                stringBuilder.append(bundle.getString("userMustFightText"));
+                break;
+        }
+        stringBuilder.append('\n');
+        dialog.setText(getText());
     }
 }

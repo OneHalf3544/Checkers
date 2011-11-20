@@ -1,9 +1,7 @@
-package ru.javatalks.checkers.actions;
+package ru.javatalks.checkers.gui.actions;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ru.javatalks.checkers.Language;
-import ru.javatalks.checkers.Dialog;
+import ru.javatalks.checkers.gui.Dialog;
+import ru.javatalks.checkers.gui.Language;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -18,7 +16,7 @@ public class ChangeLangAction extends AbstractAction {
 
     private final Language language;
 
-    private Dialog dialog;
+    private final Dialog dialog;
 
     public ChangeLangAction(Dialog dialog, Language language) {
         super(language.getNameForMenu());
@@ -26,6 +24,7 @@ public class ChangeLangAction extends AbstractAction {
         this.dialog = dialog;
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
         dialog.setLanguage(language);
     }

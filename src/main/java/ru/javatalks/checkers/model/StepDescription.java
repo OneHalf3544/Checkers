@@ -27,18 +27,6 @@ public class StepDescription {
         this.victim = null;
     }
 
-    public Cell getFrom() {
-        return from;
-    }
-
-    public Cell getTo() {
-        return to;
-    }
-
-    public Cell getVictim() {
-        return victim;
-    }
-
     public Player getPlayer() {
         return checker.getOwner();
     }

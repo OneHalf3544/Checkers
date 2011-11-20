@@ -1,5 +1,6 @@
 package ru.javatalks.checkers.model;
 
+import com.sun.istack.internal.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
@@ -73,6 +74,7 @@ public class ChessBoardModel implements Iterable<Cell> {
         return contents[x][y];
     }
 
+    @Nullable
     public Cell getRelativeCell(Cell cell, StepDirection direction) {
         return getRelativeCell(cell, direction, 1);
     }
@@ -87,26 +89,18 @@ public class ChessBoardModel implements Iterable<Cell> {
 
         StepDirection direction = getDirection(activeCell, targetCell);
 
-        Cell to = getRelativeCell(activeCell, direction);
         Checker movedChecker = activeCell.getChecker();
 
-        to.setChecker(movedChecker);
+        targetCell.setChecker(movedChecker);
         activeCell.setChecker(null);
 
-        checkNewQueens();
-        StepDescription stepDescription = new StepDescription(movedChecker, activeCell, to);
+        searchNewQueens();
+        StepDescription stepDescription = new StepDescription(movedChecker, activeCell, targetCell);
 
         fireMoved(stepDescription);
         fireBoardChange();
 
         return stepDescription;
-    }
-
-    public StepDescription move(Cell from, StepDirection direction) {
-        assert !from.isEmpty();
-        assert direction != null;
-
-        return move(from, getRelativeCell(from, direction));
     }
 
     private void fireMoved(StepDescription stepDescription) {
@@ -178,13 +172,14 @@ public class ChessBoardModel implements Iterable<Cell> {
         StepDirection direction = getDirection(activeCell, targetCell);
 
         Checker checker = activeCell.getChecker();
-        Cell victim = searchNextNonEmpty(activeCell, direction);
+        Cell victimCell = searchNextNonEmpty(activeCell, direction);
 
         activeCell.setChecker(null);
-        victim.setChecker(null);
+        victimCell.setChecker(null);
         targetCell.setChecker(checker);
 
-        StepDescription stepDescription = new StepDescription(checker, activeCell, targetCell, victim);
+        searchNewQueens();
+        StepDescription stepDescription = new StepDescription(checker, activeCell, targetCell, victimCell);
         
         fireMoved(stepDescription);
         fireBoardChange();
@@ -192,7 +187,7 @@ public class ChessBoardModel implements Iterable<Cell> {
         return stepDescription;
     }
 
-    private void checkNewQueens() {
+    private void searchNewQueens() {
         int y = 0;
         for (int x = 0; x < CELL_SIDE_NUM; x += 2) {
             Cell cell = contents[x][y];
@@ -207,7 +202,6 @@ public class ChessBoardModel implements Iterable<Cell> {
             if (cell.hasCheckerOf(Player.USER) && cell.hasSimpleChecker()) {
                 cell.getChecker().makeQueen();
             }
-
         }
     }
 

@@ -1,8 +1,8 @@
-package ru.javatalks.checkers;
+package ru.javatalks.checkers.gui;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.javatalks.checkers.actions.*;
+import ru.javatalks.checkers.gui.actions.*;
 import ru.javatalks.checkers.model.ChessBoardModel;
 import ru.javatalks.checkers.model.Player;
 
@@ -10,7 +10,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FlowLayout;
-import java.util.ResourceBundle;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 
@@ -25,7 +24,7 @@ import static java.lang.System.exit;
 public class Dialog {
 
     @Autowired
-    private L10nBundleBundle bundle;
+    private L10nBundle bundle;
 
     @Autowired
     private ChessBoardModel boardModel;
