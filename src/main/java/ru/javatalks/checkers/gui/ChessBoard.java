@@ -3,13 +3,15 @@ package ru.javatalks.checkers.gui;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.logic.ChessBoardListener;
+import ru.javatalks.checkers.logic.ChessBoardModel;
 import ru.javatalks.checkers.model.*;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 import java.awt.*;
 
-import static ru.javatalks.checkers.model.ChessBoardModel.CELL_SIDE_NUM;
+import static ru.javatalks.checkers.logic.ChessBoardModel.CELL_SIDE_NUM;
 
 /**
  * This class draws chessboard and sets each cell's attributes - index, status, coordinates on X and Y
@@ -27,25 +29,39 @@ public class ChessBoard extends JPanel {
     @Autowired
     private Dialog dialog;
 
-    /* The offset from left and top frame bounds  */
-    static final int OFFSET_LEFT_BOUND = 30;
+    /** The offset from left frame bound */
+    public static final int OFFSET_LEFT_BOUND = 30;
 
-    static final int OFFSET_TOP_BOUND = 30;
+    /** The offset from top frame bound */
+    public static final int OFFSET_TOP_BOUND = 30;
 
-    private final Dimension preferredSize
-    = new Dimension(CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE, CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE);
+    private final Dimension preferredSize = new Dimension(
+            CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE,
+            CELL_SIDE_NUM * CellType.CELL_SIZE + CellType.CELL_SIZE);
 
-    /* Those arrays we use in  makeIndex() method and in painting numbers of chess board in method paint()*/
+    /**
+     * Horizontal indexes
+     */
     private final String[] literals = {"a", "b", "c", "d", "e", "f", "g", "h"};
+
+    /**
+     * Vertical indexes
+     */
     private final String[] numbers = {"8", "7", "6", "5", "4", "3", "2", "1"};
 
     private Cell activeCell = null;
 
+    /**
+     * Constructor of chessboard panel
+     */
     public ChessBoard() {
         this.setMinimumSize(preferredSize);
         this.setPreferredSize(preferredSize);
     }
 
+    /**
+     * Initialise panel
+     */
     @PostConstruct
     public void initBoard() {
         chessBoardModel.addListener(new ChessBoardChangeListener());
@@ -53,7 +69,7 @@ public class ChessBoard extends JPanel {
     }
 
     private CellType getTypeForCell(int x, int y) {
-        /* unpaired cols in paired rows are grey */
+        // unpaired cols in paired rows are grey
         if ((x + y) % 2 != 0) {
             return CellType.WHITE_CELL;
         }
@@ -77,7 +93,7 @@ public class ChessBoard extends JPanel {
 
     @Override
     public void paintComponent(Graphics g) {
-        logger.trace("paint component");
+        logger.debug("paint component");
 
         super.paintComponent(g);
         Graphics2D graphics = (Graphics2D) g;
@@ -127,6 +143,16 @@ public class ChessBoard extends JPanel {
 
     public Cell getActiveCell() {
         return activeCell;
+    }
+
+    Cell getCellByCoordinates(int clickedX, int clickedY) {
+        int x = (clickedX - OFFSET_LEFT_BOUND) / CellType.CELL_SIZE;
+        int y = CELL_SIDE_NUM - (clickedY - OFFSET_TOP_BOUND) / CellType.CELL_SIZE -1;
+
+        if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+            return chessBoardModel.getCellAt(x, y);
+        }
+        return null;
     }
 
     private class ChessBoardChangeListener implements ChessBoardListener {

@@ -4,6 +4,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
+ * Main class for start initializing game with spring
+ *
  * Date: 14.11.11
  * Time: 21:00
  *

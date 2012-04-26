@@ -3,11 +3,11 @@ package ru.javatalks.checkers.gui;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.javatalks.checkers.logic.CheckerStepException;
 import ru.javatalks.checkers.model.Cell;
-import ru.javatalks.checkers.model.ChessBoardModel;
-import ru.javatalks.checkers.model.Logic;
 
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /** 
  * This class provides user's actions on chess board
@@ -20,10 +20,7 @@ class CheckBoardMouseListener extends MouseAdapter {
     private static final Logger logger = Logger.getLogger(CheckBoardMouseListener.class);
 
     @Autowired
-    private ChessBoardModel chessBoardModel;
-
-    @Autowired
-    private Logic logic;
+    private UserLogic userLogic;
 
     @Autowired
     private ChessBoard chessBoard;
@@ -31,9 +28,22 @@ class CheckBoardMouseListener extends MouseAdapter {
     @Autowired
     private StepLogger stepLogger;
 
+    private boolean active = false;
+
     @Override
     public void mousePressed(MouseEvent evt) {
-        Cell clickedCell = getCellByCoordinates(evt.getX(), evt.getY());
+        // Don't process event, if listener has inactive state
+        if (!active) {
+            return;
+        }
+
+        Cell clickedCell = chessBoard.getCellByCoordinates(evt.getX(), evt.getY());
+
+        // Right-button mouse click - deactivates any active checker
+        if (evt.getButton() == MouseEvent.BUTTON3) {
+            resetActiveCell();
+            return;
+        }
 
         if (clickedCell == null || clickedCell.hasOpponentChecker()) {
             return;
@@ -55,29 +65,24 @@ class CheckBoardMouseListener extends MouseAdapter {
             // We activated checker, so second click selects target cell
             try {
                 Cell activeCell = getActiveCell();
-                logic.doStep(activeCell, clickedCell);
-                logic.doCompStep();
+                userLogic.doStep(activeCell, clickedCell);
+                active = false;
             } catch (CheckerStepException e) {
                 stepLogger.logErrorCause(e);
                 logger.info(e.getCauseOfError());
             }
         }
-
-        // Right-button mouse click - deactivates any active checker
-        if (evt.getButton() == MouseEvent.BUTTON3) {
-            resetActiveCell();
-        }
     }
 
-    public boolean hasActiveChecker() {
+    private boolean hasActiveChecker() {
         return chessBoard.hasActiveChecker();
     }
 
-    void setActiveCell(Cell cell) {
+    private void setActiveCell(Cell cell) {
         chessBoard.setActiveCell(cell);
     }
 
-    void resetActiveCell() {
+    private void resetActiveCell() {
         chessBoard.setActiveCell(null);
     }
 
@@ -85,13 +90,7 @@ class CheckBoardMouseListener extends MouseAdapter {
         return chessBoard.getActiveCell();
     }
 
-    Cell getCellByCoordinates(int clickedX, int clickedY) {
-        int x = (clickedX - ChessBoard.OFFSET_LEFT_BOUND) / CellType.CELL_SIZE;
-        int y = ChessBoardModel.CELL_SIDE_NUM - (clickedY - ChessBoard.OFFSET_TOP_BOUND) / CellType.CELL_SIZE -1;
-
-        if (x >= 0 && x < 8 && y >= 0 && y < 8) {
-            return chessBoardModel.getCellAt(x, y);
-        }
-        return null;
+    public void setActiveState() {
+        active = true;
     }
 }

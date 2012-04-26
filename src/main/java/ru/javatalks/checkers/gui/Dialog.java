@@ -3,15 +3,12 @@ package ru.javatalks.checkers.gui;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.gui.actions.*;
-import ru.javatalks.checkers.model.ChessBoardModel;
+import ru.javatalks.checkers.logic.ChessBoardModel;
 import ru.javatalks.checkers.model.Player;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FlowLayout;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
+import java.awt.*;
 
 import static java.lang.System.exit;
 
@@ -30,7 +27,7 @@ public class Dialog {
     private ChessBoardModel boardModel;
 
     @Autowired
-    private ChessBoard chessBoardPainter;
+    private ChessBoard chessBoardPanel;
 
     @Autowired
     private CheckBoardMouseListener act;
@@ -51,30 +48,32 @@ public class Dialog {
     private ChessBoardModel chessBoardModel;
 
     @Autowired
+    private GameFlowController gameFlowController;
+
+    @Autowired
     private StepLogger stepLogger;
 
     private Language langFlag = Language.RUSSIAN;
 
     private JTextArea tArea;
-
     private JFrame frame;
-    private JMenuBar menuBar;
 
+    private JMenuBar menuBar;
     private JMenu menuGame;
     private JMenu menuSettings;
-    private JMenu itemLanguage;
 
+    private JMenu itemLanguage;
     private JCheckBoxMenuItem cbRusLang;
     private JCheckBoxMenuItem cbEngLang;
+
     private JCheckBoxMenuItem cbUkrLang;
 
     private JMenu menuHelp;
-
     private JMenuItem itemNewGame;
     private JMenuItem itemExit;
     private JMenuItem itemRules;
-    private JMenuItem itemAbout;
 
+    private JMenuItem itemAbout;
     private JLabel labelComp;
     private JLabel labelUser;
     private JPanel resultPanel;
@@ -121,7 +120,7 @@ public class Dialog {
 
         tArea.append(bundle.getString("stepUserText") + '\n');
 
-        chessBoardPainter.addMouseListener(act);
+        chessBoardPanel.addMouseListener(act);
 
         menuSettings.add(itemLanguage);
 
@@ -166,7 +165,7 @@ public class Dialog {
         resultPanel.add(scrollPane);
         resultPanel.add(Box.createVerticalStrut(20));
 
-        mainPanel.add(chessBoardPainter);
+        mainPanel.add(chessBoardPanel);
         mainPanel.add(resultPanel);
 
         setLanguage(langFlag);
@@ -244,6 +243,7 @@ public class Dialog {
     }
 
     private void notifyAboutGameEnd(String[] optionsDialog, String titleKey, String textKey) {
+        gameFlowController.stopThread();
         int userChoice = JOptionPane.showOptionDialog(null,
                 bundle.getString(textKey),
                 bundle.getString(titleKey),
@@ -262,7 +262,16 @@ public class Dialog {
         stepLogger.clear();
     }
 
-    public void setText(String text) {
-        tArea.setText(text);
+    /**
+     * Thread safe set log content
+     * @param text
+     */
+    public void setText(final String text) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tArea.setText(text);
+            }
+        });
     }
 }

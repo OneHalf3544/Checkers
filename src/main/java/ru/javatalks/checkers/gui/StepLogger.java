@@ -2,11 +2,17 @@ package ru.javatalks.checkers.gui;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.javatalks.checkers.gui.CheckerStepException.Cause;
+import ru.javatalks.checkers.logic.CheckerStepException;
+import ru.javatalks.checkers.logic.ChessBoardListener;
+import ru.javatalks.checkers.logic.ChessBoardModel;
+import ru.javatalks.checkers.logic.CheckerStepException.Cause;
 import ru.javatalks.checkers.model.*;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * Listener of game steps. Write log to game window.
+ */
 @Service
 public class StepLogger implements ChessBoardListener {
 
@@ -31,37 +37,40 @@ public class StepLogger implements ChessBoardListener {
 
     @Override
     public void moved(StepDescription step) {
-        if (step.getPlayer() == Player.USER) {
-            userStep(step);
-        }
-        else {
-            compStep(step);
-        }
+        addStepToLog(step, bundle.getString(step.getPlayer() == Player.USER
+                ? "stepUserText" : "stepCompText"));
         dialog.setText(getText());
     }
 
-    private void userStep(StepDescription step) {
-        stringBuilder.append(bundle.getString("stepUserText")).append('\n');
-        stringBuilder.append(step).append('\n');
-
-//        stringBuilder.append(bundle.getString("userHasFighterText")).append(from.getIndex()).append("\n");
-//        stringBuilder.append(bundle.getString("userMustFightText")).append('\n');
-//        stringBuilder.append(bundle.getString("wrongNextCellText")).append('\n');
-    }
-
-    private void compStep(StepDescription step) {
-        stringBuilder.append(bundle.getString("stepCompText")).append('\n');
+    /**
+     * Add step description to log
+     * @param step recorded step
+     * @param playerText message code of current user
+     */
+    private void addStepToLog(StepDescription step, String playerText) {
+        stringBuilder.append(playerText).append('\n');
         stringBuilder.append(step).append('\n');
     }
 
+    /**
+     * Get log content (used for write result to gui)
+     * @return log content
+     */
     public String getText() {
         return stringBuilder.toString();
     }
 
+    /**
+     * Clear log content
+     */
     public void clear() {
         stringBuilder.setLength(0);
     }
 
+    /**
+     * Add error description to game log
+     * @param exception
+     */
     public void logErrorCause(CheckerStepException exception) {
         Cause cause = exception.getCauseOfError();
         switch (cause) {

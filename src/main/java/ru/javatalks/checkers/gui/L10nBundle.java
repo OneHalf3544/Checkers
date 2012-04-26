@@ -3,7 +3,6 @@ package ru.javatalks.checkers.gui;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Map;
@@ -41,7 +40,7 @@ public class L10nBundle {
     private ResourceBundle getBundle(Language language) throws IOException {
         Reader reader = null;
         try {
-            reader = new FileReader(language.getPropFile());
+            reader = language.getReader();
             return new PropertyResourceBundle(reader);
         }
         finally {

@@ -1,6 +1,7 @@
 package ru.javatalks.checkers.gui;
 
-import java.io.File;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.NoSuchElementException;
 
 /**
@@ -11,16 +12,16 @@ import java.util.NoSuchElementException;
  */
 public enum Language {
 
-    RUSSIAN("resources/russian.properties", "Русский"),
-    UKRAINIAN("resources/ukrainian.properties", "Украинский"),
-    ENGLISH("resources/english.properties", "English");
+    RUSSIAN("/russian.properties", "Р СѓСЃСЃРєРёР№"),
+    UKRAINIAN("/ukrainian.properties", "РЈРєСЂР°РёРЅСЃРєРёР№"),
+    ENGLISH("/english.properties", "English");
     
-    private final File file;
+    private final String resourceName;
     private final String nameForMenu;
 
     Language(String fileName, String nameForMenu) {
         this.nameForMenu = nameForMenu;
-        this.file = new File(fileName);
+        this.resourceName = fileName;
     }
 
     public static Language getByCode(String langName) {
@@ -32,8 +33,8 @@ public enum Language {
         throw new NoSuchElementException(String.format("don't has %s language", langName));
     }
 
-    public File getPropFile() {
-        return file;
+    public Reader getReader() {
+        return new InputStreamReader(Language.class.getResourceAsStream(resourceName));
     }
 
     public String getNameForMenu() {
