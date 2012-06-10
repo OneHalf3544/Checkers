@@ -3,7 +3,7 @@ package ru.javatalks.checkers.gui.actions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.gui.Dialog;
-import ru.javatalks.checkers.gui.L10nBundle;
+import ru.javatalks.checkers.gui.language.L10nBundle;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;

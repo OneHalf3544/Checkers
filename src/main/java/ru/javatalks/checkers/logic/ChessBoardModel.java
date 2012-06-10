@@ -38,7 +38,7 @@ public interface ChessBoardModel extends Iterable<Cell> {
      * @param targetCell cell for end fight
      * @return step description
      */
-    public StepDescription fight(Cell activeCell, Cell targetCell);
+    public StepDescription fight(Cell activeCell, Cell ... targetCell);
 
     /**
      * Direction to move from one cell to another
@@ -59,7 +59,6 @@ public interface ChessBoardModel extends Iterable<Cell> {
 
     public Cell searchNextNonEmpty(Cell activeCell, StepDirection direction);
 
-    @Nullable
     public Cell getRelativeCell(Cell cell, StepDirection direction);
 
     public int getCompCheckerNumber();

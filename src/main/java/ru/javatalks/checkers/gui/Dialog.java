@@ -3,6 +3,9 @@ package ru.javatalks.checkers.gui;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.gui.actions.*;
+import ru.javatalks.checkers.gui.language.L10nBundle;
+import ru.javatalks.checkers.gui.language.LangMenuItems;
+import ru.javatalks.checkers.gui.language.Language;
 import ru.javatalks.checkers.logic.ChessBoardModel;
 import ru.javatalks.checkers.model.Player;
 
@@ -53,21 +56,16 @@ public class Dialog {
     @Autowired
     private StepLogger stepLogger;
 
-    private Language langFlag = Language.RUSSIAN;
+    private LangMenuItems itemLanguage;
 
     private JTextArea tArea;
-    private JFrame frame;
 
+    private JFrame frame;
     private JMenuBar menuBar;
     private JMenu menuGame;
+
     private JMenu menuSettings;
-
-    private JMenu itemLanguage;
-    private JCheckBoxMenuItem cbRusLang;
-    private JCheckBoxMenuItem cbEngLang;
-
-    private JCheckBoxMenuItem cbUkrLang;
-
+ 
     private JMenu menuHelp;
     private JMenuItem itemNewGame;
     private JMenuItem itemExit;
@@ -97,18 +95,12 @@ public class Dialog {
 
     private void initializeComponent() {
         tArea = new JTextArea(26, 12);
-        langFlag = Language.RUSSIAN;
 
         frame = new JFrame();
         menuBar = new JMenuBar();
 
         menuGame = new JMenu();
         menuSettings = new JMenu();
-        itemLanguage = new JMenu();
-
-        cbRusLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.RUSSIAN));
-        cbEngLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.ENGLISH));
-        cbUkrLang = new JCheckBoxMenuItem(new ChangeLangAction(this, Language.UKRAINIAN));
 
         menuHelp = new JMenu();
 
@@ -122,11 +114,8 @@ public class Dialog {
 
         chessBoardPanel.addMouseListener(act);
 
+        itemLanguage = new LangMenuItems(bundle, this);
         menuSettings.add(itemLanguage);
-
-        itemLanguage.add(cbRusLang);
-        itemLanguage.add(cbEngLang);
-        itemLanguage.add(cbUkrLang);
 
         itemNewGame = new JMenuItem(newGameAction);
         itemExit = new JMenuItem(exitAction);
@@ -157,7 +146,7 @@ public class Dialog {
         labelUser.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         labelComp.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
 
-        BoxLayout boxLayout = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
+        LayoutManager boxLayout = new BoxLayout(resultPanel, BoxLayout.Y_AXIS);
         resultPanel.setLayout(boxLayout);
         resultPanel.add(labelUser);
         resultPanel.add(labelComp);
@@ -168,8 +157,7 @@ public class Dialog {
         mainPanel.add(chessBoardPanel);
         mainPanel.add(resultPanel);
 
-        setLanguage(langFlag);
-
+        setLanguage(bundle.getCurrentLanguage());
         frame.setFocusable(true);
         frame.getRootPane().setOpaque(true);
         frame.getContentPane().setLayout(new BorderLayout());
@@ -185,21 +173,6 @@ public class Dialog {
 
     public void setLanguage(Language lang) {
         bundle.setLanguage(lang);
-
-        langFlag = lang;
-
-        if (langFlag == Language.RUSSIAN) {
-            cbEngLang.setSelected(false);
-            cbUkrLang.setSelected(false);
-        }
-        if (langFlag == Language.ENGLISH) {
-            cbRusLang.setSelected(false);
-            cbUkrLang.setSelected(false);
-        }
-        if (langFlag == Language.UKRAINIAN) {
-            cbEngLang.setSelected(false);
-            cbRusLang.setSelected(false);
-        }
 
         frame.setTitle(bundle.getString("frameTitle"));
         menuGame.setText(bundle.getString("gameTitle"));

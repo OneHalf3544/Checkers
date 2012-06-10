@@ -1,7 +1,7 @@
 package ru.javatalks.checkers.gui.actions;
 
 import ru.javatalks.checkers.gui.Dialog;
-import ru.javatalks.checkers.gui.Language;
+import ru.javatalks.checkers.gui.language.Language;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

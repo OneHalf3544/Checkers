@@ -16,7 +16,8 @@
     <context:annotation-config/>
     <context:component-scan base-package="ru.javatalks.checkers"/>
 
-    <bean id="resourceBundle" class="ru.javatalks.checkers.gui.L10nBundle">
-        <constructor-arg value="RUSSIAN"/>
+    <bean id="resourceBundle" class="ru.javatalks.checkers.gui.language.L10nBundle">
+        <constructor-arg name="language" value="#{config['defaultLanguage']}"/>
+        <constructor-arg name="bundleNames" value="#{config['langBundles']}"/>
     </bean>
 </beans>

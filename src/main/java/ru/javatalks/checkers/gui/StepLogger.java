@@ -2,6 +2,7 @@ package ru.javatalks.checkers.gui;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.javatalks.checkers.gui.language.L10nBundle;
 import ru.javatalks.checkers.logic.CheckerStepException;
 import ru.javatalks.checkers.logic.ChessBoardListener;
 import ru.javatalks.checkers.logic.ChessBoardModel;

@@ -1,5 +1,8 @@
 package ru.javatalks.checkers.model;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Date: 16.11.11
  * Time: 21:11
@@ -9,11 +12,13 @@ package ru.javatalks.checkers.model;
 public class StepDescription {
 
     private final Cell from;
-    private final Cell to;
-    private final Cell victim;
+    private final List<Cell> to;
+    private final List<Cell> victim;
     private final Checker checker;
 
-    public StepDescription(Checker checker, Cell form, Cell to, Cell victim) {
+    StepDescription(Checker checker, Cell form, List<Cell> to, List<Cell> victim) {
+        assert to.size() != victim.size();
+
         this.checker = checker;
         this.from = form;
         this.to = to;
@@ -23,7 +28,7 @@ public class StepDescription {
     public StepDescription(Checker checker, Cell from, Cell to) {
         this.checker = checker;
         this.from = from;
-        this.to = to;
+        this.to = Collections.singletonList(to);
         this.victim = null;
     }
 
@@ -35,10 +40,13 @@ public class StepDescription {
     public String toString() {
         StringBuilder result = new StringBuilder("step ").append(from.getIndex()).append(" : ");
 
-        if (victim != null) {
-            result.append(victim.getIndex()).append(" : ");
-        }
+        for(int i = 0; i < to.size(); i++) {
+            if (victim != null) {
+                result.append(victim.get(i).getIndex()).append(" : ");
+            }
 
-        return result.append(to.getIndex()).toString();
+            result.append(this.to.get(i).getIndex());
+        }
+        return result.toString();
     }
 }

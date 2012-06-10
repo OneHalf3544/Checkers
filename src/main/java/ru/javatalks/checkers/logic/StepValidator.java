@@ -1,7 +1,6 @@
 package ru.javatalks.checkers.logic;
 
 import com.google.common.collect.Lists;
-import com.sun.istack.internal.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.javatalks.checkers.model.Cell;
@@ -96,6 +95,7 @@ public class StepValidator {
             return false;
         }
 
+        // TODO при текущей логике шашка может перепрыгивать через несколько других шашек (не проверяется место приземления)
         Cell nextNonEmptyCell = searchNextNonEmpty(victimCell, direction);
         if (nextNonEmptyCell != null) {
             int maxDist = distanceBetweenCells(fighterCell, nextNonEmptyCell);
@@ -211,7 +211,7 @@ public class StepValidator {
         return maxDx >= dx;
     }
 
-    public List<StepDirection> getPossibleDirectionFor(@NotNull Player player) {
+    public List<StepDirection> getPossibleDirectionFor(Player player) {
         return player == Player.USER ? directionsForUser : directionsForOpponent;
     }
 

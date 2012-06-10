@@ -1,11 +1,12 @@
 package ru.javatalks.checkers.logic;
 
-import com.sun.istack.internal.Nullable;
 import org.springframework.stereotype.Service;
 import ru.javatalks.checkers.model.*;
 
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Implementation of chessboard model interface
@@ -96,7 +97,6 @@ public class ChessBoardModelImpl implements ChessBoardModel {
      * @return
      */
     @Override
-    @Nullable
     public Cell getRelativeCell(Cell cell, StepDirection direction) {
         return getRelativeCell(cell, direction, 1);
     }
@@ -184,9 +184,28 @@ public class ChessBoardModelImpl implements ChessBoardModel {
     }
 
     @Override
-    public StepDescription fight(Cell activeCell, Cell targetCell) {
+    public StepDescription fight(Cell activeCell, Cell ... targetCells) {
         assert activeCell.hasQueen() || activeCell.hasSimpleChecker();
 
+        StepDescriptionBuilder stepDescriptionBuilder = new StepDescriptionBuilder(activeCell.getChecker(), activeCell);
+        for (Cell targetCell : targetCells) {
+            Cell victim = subFight(activeCell, targetCell);
+            if (victim == null) {
+                stepDescriptionBuilder.step(targetCell);
+                break;
+            }
+            stepDescriptionBuilder.step(victim, targetCell);
+        }
+
+        StepDescription stepDescription = stepDescriptionBuilder.build();
+
+        fireMoved(stepDescription);
+        fireBoardChange();
+
+        return stepDescription;
+    }
+
+    private Cell subFight(Cell activeCell, Cell targetCell) {
         StepDirection direction = getDirection(activeCell, targetCell);
 
         Checker checker = activeCell.getChecker();
@@ -197,12 +216,7 @@ public class ChessBoardModelImpl implements ChessBoardModel {
         targetCell.setChecker(checker);
 
         searchNewQueens();
-        StepDescription stepDescription = new StepDescription(checker, activeCell, targetCell, victimCell);
-
-        fireMoved(stepDescription);
-        fireBoardChange();
-
-        return stepDescription;
+        return victimCell;
     }
 
     /**

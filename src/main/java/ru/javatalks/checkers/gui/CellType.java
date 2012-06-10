@@ -11,12 +11,14 @@ import java.awt.*;
 public enum CellType {
 
     WHITE_CELL {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawCell(graphics, Color.WHITE);
         }
     },
     GREY_CELL {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawCell(graphics, Color.GRAY);
@@ -30,36 +32,42 @@ public enum CellType {
         }
     },
     OPPONENT_CHECKER {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawSimpleChecker(graphics, Color.BLACK);
         }
     },
     USER_QUEEN {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawQueen(graphics, Color.LIGHT_GRAY, Color.WHITE);
         }
     },
     OPPONENT_QUEEN {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawQueen(graphics, Color.LIGHT_GRAY, Color.BLACK);
         }
     },
     ACTIVE {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawSimpleChecker(graphics, Color.RED);
         }
     },
     ACTIVE_QUEEN {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawQueen(graphics, Color.RED, Color.WHITE);
         }
     },
     CHECKER_IN_FIGHT {
+
         @Override
         public void paintCell(Graphics2D graphics) {
             drawSimpleChecker(graphics, Color.GREEN);
@@ -80,19 +88,19 @@ public enum CellType {
 
     public abstract void paintCell(Graphics2D graphics);
 
-    private static void drawCell(Graphics2D graphics, Color color) {
+    protected void drawCell(Graphics2D graphics, Color color) {
         graphics.setPaint(color);
         graphics.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
     }
 
-    private static void drawSimpleChecker(Graphics2D graphics, Color checkerColor) {
+    protected void drawSimpleChecker(Graphics2D graphics, Color checkerColor) {
         drawCell(graphics, Color.GRAY);
 
         graphics.setPaint(checkerColor);
         graphics.fillOval(CIRCLE_OFFSET, CIRCLE_OFFSET, CHECKER_DIAMETER, CHECKER_DIAMETER);
     }
 
-    private static void drawQueen(Graphics2D graphics, Color innerCircleColor, Color checkerColor) {
+    protected void drawQueen(Graphics2D graphics, Color innerCircleColor, Color checkerColor) {
         drawSimpleChecker(graphics, checkerColor);
 
         graphics.setPaint(innerCircleColor);
