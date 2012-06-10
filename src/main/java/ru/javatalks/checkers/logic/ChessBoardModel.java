@@ -1,6 +1,5 @@
 package ru.javatalks.checkers.logic;
 
-import com.sun.istack.internal.Nullable;
 import ru.javatalks.checkers.model.Cell;
 import ru.javatalks.checkers.model.Player;
 import ru.javatalks.checkers.model.StepDescription;
