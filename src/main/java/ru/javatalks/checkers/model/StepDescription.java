@@ -1,9 +1,11 @@
 package ru.javatalks.checkers.model;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Date: 16.11.11
@@ -34,12 +36,19 @@ public class StepDescription {
         this.victims = Collections.singletonList(null);
     }
 
-    public StepDescription addMove(Cell next, @Nullable Cell victim) {
+    public StepDescription addMove(StepDescription nextStep) {
+        checkArgument(nextStep.isFight());
+        checkArgument(Objects.equals(to.get(to.size() - 1), nextStep.from));
+
         List<Cell> newTo = new ArrayList<Cell>(to);
-        newTo.add(next);
+        newTo.addAll(nextStep.to);
         List<Cell> newVictims = new ArrayList<Cell>(victims);
-        newVictims.add(victim);
+        newVictims.addAll(nextStep.victims);
         return new StepDescription(checker, from, newTo, newVictims);
+    }
+
+    public boolean isFight() {
+        return victims.get(0) != null;
     }
 
     public Player getPlayer() {
@@ -55,7 +64,7 @@ public class StepDescription {
                 result.append(victims.get(i).getIndex()).append(" : ");
             }
 
-            result.append(this.to.get(i).getIndex());
+            result.append(to.get(i).getIndex());
         }
         return result.toString();
     }

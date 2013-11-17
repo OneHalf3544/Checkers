@@ -55,8 +55,13 @@ public class UserLogic implements PlayerLogic {
             Cell next = clickedCells.take();
             StepDescription step = doStep(current, next);
 
-            while (validator.canMove(next)) {
-                step = step.addMove(clickedCells.take(), null);
+            current = next;
+            while (step.isFight() && validator.canFight(next)) {
+                next = clickedCells.take();
+                if (validator.canFight(current, next)) {
+                    step = step.addMove(chessBoardModel.fight(current, next));
+                    current = next;
+                }
             }
             active = false;
             return step;
