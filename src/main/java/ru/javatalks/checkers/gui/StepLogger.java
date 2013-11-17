@@ -49,8 +49,7 @@ public class StepLogger implements ChessBoardListener {
      * @param playerText message code of current user
      */
     private void addStepToLog(StepDescription step, String playerText) {
-        stringBuilder.append(playerText).append('\n');
-        stringBuilder.append(step).append('\n');
+        stringBuilder.append(playerText).append(step).append('\n');
     }
 
     /**

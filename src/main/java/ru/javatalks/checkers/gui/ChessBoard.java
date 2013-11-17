@@ -2,10 +2,10 @@ package ru.javatalks.checkers.gui;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ru.javatalks.checkers.logic.ChessBoardListener;
 import ru.javatalks.checkers.logic.ChessBoardModel;
-import ru.javatalks.checkers.model.*;
+import ru.javatalks.checkers.model.Cell;
+import ru.javatalks.checkers.model.StepDescription;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -18,7 +18,6 @@ import static ru.javatalks.checkers.logic.ChessBoardModel.CELL_SIDE_NUM;
  *  
  * @author Kapellan
  */
-@Component
 public class ChessBoard extends JPanel {
     
     private static final Logger logger = Logger.getLogger(ChessBoard.class);
