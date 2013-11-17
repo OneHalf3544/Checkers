@@ -39,11 +39,16 @@ public class ComputerLogic implements PlayerLogic {
      * Make a step by computer
      * @return Step description
      */
+    @Override
     public StepDescription doStep() {
-        log.info("step by computer");
+        log.debug("step by computer");
         List<Cell> fighters = validator.getFighters(player);
         if (!fighters.isEmpty()) {
-            return randomizer.randomFight(fighters.get(random.nextInt(fighters.size())));
+            StepDescription step = randomFight(fighters);
+            while (step.isFight() && !(fighters = validator.getFighters(player)).isEmpty()) {
+                step = step.addMove(randomFight(fighters));
+            }
+            return step;
         }
 
         List<Cell> compStepper = validator.getSteppers(player);
@@ -52,6 +57,10 @@ public class ComputerLogic implements PlayerLogic {
         }
 
         throw new IllegalStateException("opponent don't has possible step");
+    }
+
+    private StepDescription randomFight(List<Cell> fighters) {
+        return randomizer.randomFight(fighters.get(random.nextInt(fighters.size())));
     }
 
     @Override

@@ -16,6 +16,8 @@
     <context:annotation-config/>
     <context:component-scan base-package="ru.javatalks.checkers"/>
 
+    <bean class="ru.javatalks.checkers.gui.ChessBoardPanel"/>
+
     <bean id="resourceBundle" class="ru.javatalks.checkers.gui.language.L10nBundle">
         <constructor-arg name="language" value="#{config['defaultLanguage']}"/>
         <constructor-arg name="bundleNames" value="#{config['langBundles']}"/>

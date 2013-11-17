@@ -10,7 +10,7 @@
     </appender>
 
     <logger name="ru.javatalks.checkers">
-        <level value="DEBUG"/>
+        <level value="INFO"/>
     </logger>
 
     <root>

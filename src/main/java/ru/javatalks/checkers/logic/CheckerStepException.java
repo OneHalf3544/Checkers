@@ -14,7 +14,8 @@ public class CheckerStepException extends Exception {
         MUST_FIGHT("user has fighter checker and must do step by it"),
         DO_NOT_HAS_STEP("opponent don't has possible step"),
         DO_NOT_HAS_CHECKERS("does not has checkers"),
-        WRONG_STEP("can't do this step");
+        WRONG_STEP("can't do this step"),
+        GAME_HAS_BEEN_INTERRUPTED("game has been interrupted");
 
         private final String message;
 

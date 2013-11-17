@@ -30,7 +30,7 @@ class PlayersQueueRunner implements Runnable {
             }
 
             PlayerLogic currentPlayer = players[i];
-            log.info("step by " + currentPlayer);
+            log.debug("step by " + currentPlayer);
             makeStep(currentPlayer);
             i = 1 - i;
         }
