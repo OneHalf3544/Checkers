@@ -12,37 +12,6 @@
         <springVersion>3.1.1.RELEASE</springVersion>
     </properties>
 
-    <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>ru.javatalks.checkers.ContextLoader</mainClass>
-                            <arguments/>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-
-    </build>
     <dependencies>
         <dependency>
             <groupId>commons-io</groupId>
