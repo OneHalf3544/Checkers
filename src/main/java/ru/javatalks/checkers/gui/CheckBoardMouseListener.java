@@ -1,9 +1,7 @@
 package ru.javatalks.checkers.gui;
 
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.javatalks.checkers.logic.CheckerStepException;
 import ru.javatalks.checkers.model.Cell;
 
 import java.awt.event.MouseAdapter;
@@ -17,23 +15,16 @@ import java.awt.event.MouseEvent;
 @Component
 class CheckBoardMouseListener extends MouseAdapter {
 
-    private static final Logger logger = Logger.getLogger(CheckBoardMouseListener.class);
-
     @Autowired
     private UserLogic userLogic;
 
     @Autowired
-    private ChessBoard chessBoard;
-
-    @Autowired
-    private StepLogger stepLogger;
-
-    private boolean active = false;
+    private ChessBoardPanel chessBoard;
 
     @Override
     public void mousePressed(MouseEvent evt) {
         // Don't process event, if listener has inactive state
-        if (!active) {
+        if (!userLogic.isActive()) {
             return;
         }
 
@@ -63,14 +54,9 @@ class CheckBoardMouseListener extends MouseAdapter {
             }
 
             // We activated checker, so second click selects target cell
-            try {
-                Cell activeCell = getActiveCell();
-                userLogic.doStep(activeCell, clickedCell);
-                active = false;
-            } catch (CheckerStepException e) {
-                stepLogger.logErrorCause(e);
-                logger.info(e.getCauseOfError());
-            }
+            userLogic.addClickedCell(getActiveCell());
+            userLogic.addClickedCell(clickedCell);
+            setActiveCell(clickedCell);
         }
     }
 
@@ -88,9 +74,5 @@ class CheckBoardMouseListener extends MouseAdapter {
 
     private Cell getActiveCell() {
         return chessBoard.getActiveCell();
-    }
-
-    public void setActiveState() {
-        active = true;
     }
 }

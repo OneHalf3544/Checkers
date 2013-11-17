@@ -30,7 +30,7 @@ public class Dialog {
     private ChessBoardModel boardModel;
 
     @Autowired
-    private ChessBoard chessBoardPanel;
+    private ChessBoardPanel chessBoardPanel;
 
     @Autowired
     private CheckBoardMouseListener act;

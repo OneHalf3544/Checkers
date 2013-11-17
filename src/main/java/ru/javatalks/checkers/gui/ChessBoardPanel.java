@@ -18,9 +18,9 @@ import static ru.javatalks.checkers.logic.ChessBoardModel.CELL_SIDE_NUM;
  *  
  * @author Kapellan
  */
-public class ChessBoard extends JPanel {
+public class ChessBoardPanel extends JPanel {
     
-    private static final Logger logger = Logger.getLogger(ChessBoard.class);
+    private static final Logger logger = Logger.getLogger(ChessBoardPanel.class);
 
     @Autowired
     private ChessBoardModel chessBoardModel;
@@ -53,7 +53,7 @@ public class ChessBoard extends JPanel {
     /**
      * Constructor of chessboard panel
      */
-    public ChessBoard() {
+    public ChessBoardPanel() {
         this.setMinimumSize(preferredSize);
         this.setPreferredSize(preferredSize);
     }

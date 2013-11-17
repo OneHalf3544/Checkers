@@ -11,6 +11,9 @@ import ru.javatalks.checkers.model.Cell;
 import ru.javatalks.checkers.model.Player;
 import ru.javatalks.checkers.model.StepDescription;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -32,32 +35,40 @@ public class UserLogic implements PlayerLogic {
 
     private final StepValidator validator;
 
-    private CheckBoardMouseListener checkBoardListener;
+    private final BlockingQueue<Cell> clickedCells;
 
-    private final Object lockObject = new Object();
-
-    private StepDescription lastStep;
+    private volatile boolean active = false;
 
     @Autowired
-    UserLogic(ChessBoardModel chessBoardModel, StepValidator validator, CheckBoardMouseListener checkBoardListener) {
+    UserLogic(ChessBoardModel chessBoardModel, StepValidator validator) {
         this.chessBoardModel = chessBoardModel;
         this.validator = validator;
-        this.checkBoardListener = checkBoardListener;
+        this.clickedCells = new LinkedBlockingQueue<Cell>();
     }
 
     @Override
     public StepDescription doStep() throws CheckerStepException {
-        log.info("wait a step by user");
+        log.debug("wait a step by user");
+        active = true;
         try {
-            synchronized (lockObject) {
-                checkBoardListener.setActiveState();
-                lockObject.wait();
-                return lastStep;
+            Cell current = clickedCells.take();
+            Cell next = clickedCells.take();
+            StepDescription step = doStep(current, next);
+
+            while (validator.canMove(next)) {
+                step = step.addMove(clickedCells.take(), null);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
+            active = false;
+            return step;
         }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CheckerStepException(Player.USER, CheckerStepException.Cause.GAME_HAS_BEEN_INTERRUPTED);
+        }
+    }
+
+    public void addClickedCell(Cell cell) {
+        clickedCells.add(cell);
     }
 
     StepDescription doStep(Cell from, Cell to) throws CheckerStepException {
@@ -65,29 +76,27 @@ public class UserLogic implements PlayerLogic {
         assert to.isEmpty();
 
         checkArgument(player == from.getChecker().getOwner());
-        synchronized (lockObject) {
-
-            if (!validator.getFighters(player).isEmpty()) {
-                if (validator.canFight(from, to)) {
-                    lastStep = chessBoardModel.fight(from, to);
-                    lockObject.notifyAll();
-                    return lastStep;
-                }
-                throw new CheckerStepException(player, CheckerStepException.Cause.MUST_FIGHT);
+        if (!validator.getFighters(player).isEmpty()) {
+            if (validator.canFight(from, to)) {
+                return chessBoardModel.fight(from, to);
             }
-
-            // If there is no fighter checker we move
-            if (validator.canMove(from, to)) {
-                lastStep = chessBoardModel.move(from, to);
-                lockObject.notifyAll();
-                return lastStep;
-            }
-            throw new CheckerStepException(player, CheckerStepException.Cause.WRONG_STEP);
+            throw new CheckerStepException(player, CheckerStepException.Cause.MUST_FIGHT);
         }
+
+        // If there is no fighter checker we move
+        if (validator.canMove(from, to)) {
+            return chessBoardModel.move(from, to);
+        }
+        throw new CheckerStepException(player, CheckerStepException.Cause.WRONG_STEP);
     }
 
     @Override
     public String toString() {
         return "User";
     }
+
+    public boolean isActive() {
+        return active;
+    }
+
 }
