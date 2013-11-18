@@ -163,7 +163,7 @@ public class Dialog {
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(menuBar, BorderLayout.NORTH);
         frame.getContentPane().add(mainPanel, BorderLayout.CENTER);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setMinimumSize(new Dimension(700, 500));
         frame.pack();
         frame.setLocationRelativeTo(null);
