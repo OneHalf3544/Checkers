@@ -31,11 +31,7 @@ public class GameFlowController {
 
     @PostConstruct
     public void run() {
-        run(new PlayerLogic[]{userLogic, computerLogic});
-    }
-
-    public void run(PlayerLogic[] playerLogics) {
-        thread = new Thread(new PlayersQueueRunner(playerLogics));
+        thread = new Thread(new PlayersQueueRunner(new PlayerLogic[]{userLogic, computerLogic}));
         thread.start();
     }
 
